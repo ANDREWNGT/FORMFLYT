@@ -1,0 +1,1 @@
+This folder contains the source code for common tools used in orbital mechanics and for resolving orbit states (position, velocity, acceleration etc) given certain Keplerian elements.

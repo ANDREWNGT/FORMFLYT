@@ -14,7 +14,7 @@
 % #######################################################################
 % #######################################################################
 
-function [pos, vel, acc, trueAnom] = kepler_states(a, e, i, R, w, M, mu)
+function [pos, vel, acc, trueAnom] = kepler_states(a, e, i, R, w, M, GM)
 
 % Inputs: Six (float) Keplerian elements (angular components in degrees).
 %         - a    -> Semi-major axis (km)
@@ -23,7 +23,7 @@ function [pos, vel, acc, trueAnom] = kepler_states(a, e, i, R, w, M, mu)
 %         - R    -> Right Angle of Asc Node (degrees)
 %         - w    -> Argument of Perigee (degrees)
 %         - M    -> Mean Anomaly (degrees)
-%         - GM   -> Planetary GM Constant (mu)
+%         - GM   -> Planetary GM Constant (m^3 * kg^-1 * s^-2)
 % Output: A 1x3 position and 1x3 velocity vector in the inertial frame.
 
 % The general flow of the program, is to first solve for the radial
@@ -39,7 +39,7 @@ eccAnom = kepler_solver(M, e);
 pos_X = a * ( cosd(eccAnom) - e);
 pos_Y = a * sqrt( 1 - e^2 ) * sind(eccAnom);
 pos_norm = norm( [ pos_X pos_Y ] );
-vel_const = sqrt( mu * a ) / pos_norm;
+vel_const = sqrt( GM * a ) / pos_norm;
 vel_X = vel_const * ( -1 * sind(eccAnom) );
 vel_Y = vel_const * ( sqrt( 1 - e^2 ) * cosd(eccAnom) );
 
@@ -64,7 +64,7 @@ pos = DCM_NH * [ pos_X pos_Y 0.0 ]' ;
 vel = DCM_NH * [ vel_X vel_Y 0.0 ]' ;
 
 % With the ECI frame, we can also compute the inverse square acceleration.
-acc = ( ( -1 * mu ) * pos ) / ( pos_norm ^ 3 );
+acc = ( ( -1 * GM ) * pos ) / ( pos_norm ^ 3 );
 
 % Finally, let us not forget to compute the true anomaly.
 trueAnom = rad2deg( atan2( pos_Y, pos_X) );

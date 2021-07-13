@@ -1,0 +1,1 @@
+This folder contains the source code for plotting the primary gravitational body. Note that these functions are purely graphical and do not affect the numerical constants such as planetary radius, body masses, and gravitational constants.

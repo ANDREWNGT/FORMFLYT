@@ -1,0 +1,1 @@
+This folder contains the source code for modelling orbit perturbations and other forces (as 1x3 acceleration vectors) to be incorporated in each step of the numerical integrator.

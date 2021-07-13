@@ -1,0 +1,1 @@
+This folder contains the source code for direction cosine matrices in MATLAB (XYZ Euler rotations).
