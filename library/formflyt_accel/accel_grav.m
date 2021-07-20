@@ -14,12 +14,12 @@
 % #######################################################################
 % #######################################################################
 
-function [acc_invsq_gravity] = force_grav( pos )
+function [acc_invsq_gravity] = accel_grav( pos )
 
 % Input: Position vector (1x3) of the spacecraft
 % Output: Acceleration vector (1x3) of the spacecraft due to gravity.
 
 GM = 3.9860e+14; % Units in m^3 kg^-1 s^-2 
-acc_invsq_gravity = ( -1 * GM * pos ) / ( norm(p) ^ 3 );
+acc_invsq_gravity = ( -1 * GM * pos ) / ( norm( pos ) ^ 3 );
 
 end

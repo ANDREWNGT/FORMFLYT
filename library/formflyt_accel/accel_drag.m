@@ -17,7 +17,7 @@
 % #######################################################################
 % #######################################################################
 
-function [acc_dragforce] = force_drag( pos, vel, Cd, Ar, Ms )
+function [acc_dragforce] = accel_drag( pos, vel, Cd, Ar, Ms )
 
 % Inputs: The following spacecraft parameters and the primary body radius.
 %         - pos     -> Position vector (1x3) of the spacecraft
@@ -80,7 +80,7 @@ dragDensity = exp(AtmosExp);
 % Compute the atmospheric drag acceleration (m/s^2)
 dragAccel = 0.5 * Cd * dragDensity * areaMassRatio * ( norm(vel) ^ 2 );
 
-% Compute the drag vector in the anti-velocity direction.
+% Compute the drag acceleration vector in the anti-velocity direction.
 acc_dragforce = -1 * dragAccel * ( vel / norm(vel) );
 
 end
