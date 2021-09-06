@@ -7,10 +7,10 @@
 % ###   |_|   |_____|_|\_\|_|\/|_|_|   |____|/_/    |_|               ###
 % ###                                                                 ###
 % ### Project FORMFLYT: Forces Toolbox                                ###
-% ### Computation of central two-body force, drag force using the US  ###
-% ### Standard Atmosphere 1976, and the J2 perturbation force.        ###
+% ### Computation of central two-body force, drag force using the     ###
+% ### US Standard Atmosphere 1976, and the J2 perturbation force.     ###
 % ###                                                                 ###
-% ### By Matthew Lo and Samuel Low (12-JUL-2021), DSO NL              ###
+% ### By Matthew Lo, Andrew Ng and Samuel Low (12-JUL-2021), DSO NL   ###
 % ###                                                                 ###
 % #######################################################################
 % #######################################################################

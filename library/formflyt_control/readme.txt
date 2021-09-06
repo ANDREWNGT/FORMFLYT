@@ -1,1 +1,0 @@
-This folder contains the source code for control feedback laws to generate the desired DV needed for orbit manoeuvres.

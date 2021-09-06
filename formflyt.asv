@@ -257,21 +257,23 @@ for N = 1 : nSamples
         end
     end
     
-    % Runge-Kutta 4th Order (RK4) Propagator (3/8 Rule Variant).
-    % This code below is meant to only propagate LEO 1.
-    [p1f, v1f] = prop_RK4_38( dt, p1, v1, Cd1, Ar1, Ms1, f_J2, f_drag );
+    
+    
+    % Runge-Kutta 4th Order (RK4) Propagator (3/8 Rule Variant) for LEO 1.
+    % This code below is meant to only propagate LEO 1 without manoeuvres.
+    [p1f, v1f] = prop_RK4_38(dt, p1, v1, Cd1, Ar1, Ms1, f_J2, f_drag );
     pos1a(N+1,:) = p1f;
     vel1a(N+1,:) = v1f;
     
-    % Runge-Kutta 4th Order (RK4) Propagator (3/8 Rule Variant).
-    % This code below is meant to only propagate LEO 2.
-    [p2f, v2f] = prop_RK4_38( dt, p2, v2, Cd2, Ar2, Ms2, f_J2, f_drag );
+    % Runge-Kutta 4th Order (RK4) Propagator (3/8 Rule Variant) for LEO 2
+    % This code below is meant to only propagate LEO 1 without manoeuvres.
+    [p2f, v2f] = prop_RK4_38(dt, p2, v2, Cd2, Ar2, Ms2, f_J2, f_drag, vF2);
     pos2a(N+1,:) = p2f;
     vel2a(N+1,:) = v2f;
     
-    % Runge-Kutta 4th Order (RK4) Propagator (3/8 Rule Variant).
-    % This code below is meant to only propagate LEO 3.
-    [p3f, v3f] = prop_RK4_38( dt, p3, v3, Cd3, Ar3, Ms3, f_J2, f_drag );
+    % Runge-Kutta 4th Order (RK4) Propagator (3/8 Rule Variant) for LEO 3
+    % This code below is meant to only propagate LEO 1 without manoeuvres.
+    [p3f, v3f] = prop_RK4_38 dt, p3, v3, Cd3, Ar3, Ms3, f_J2, f_drag, dV3);
     pos3a(N+1,:) = p3f;
     vel3a(N+1,:) = v3f;
     % Control 

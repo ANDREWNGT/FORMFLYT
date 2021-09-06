@@ -6,30 +6,11 @@
 % ###   |  __|| |_| | `/ /| \  / |  __|| |__ \  /   | |               ###
 % ###   |_|   |_____|_|\_\|_|\/|_|_|   |____|/_/    |_|               ###
 % ###                                                                 ###
-% ### Project FORMFLYT: Plotting Planetary Bodies Toolbox             ###
-% ### Calls the appropriate central body plot, based on user input    ###
+% ### Project FORMFLYT: Numerical Integration Toolbox                 ###
+% ### Runge-Kutte 4th Order Numerical Integration (1/2 Rule)          ###
 % ###                                                                 ###
-% ### Adapted by Samuel Low (06-01-2021), DSO National Laboratories   ###
+% ### By Matthew Lo, Andrew Ng and Samuel Low (21-JUL-2021), DSO NL   ###
 % ###                                                                 ###
 % #######################################################################
 % #######################################################################
 
-function plot_body( body )
-
-% This is the main function that calls all other body plots in the folder.
-% Plot the central gravitational bodies, based on user input variable.
-% | 1 - Earth | 2 - Moon | 3 - Mars | 4 - Venus | 5 - Mercury |
-
-if body == 1
-    bodyplot_earth();
-elseif body == 2
-    bodyplot_moon();
-elseif body == 3
-    bodyplot_mars();
-elseif body == 4
-    bodyplot_venus();
-elseif body == 5
-    bodyplot_mercury();
-end
-
-end

@@ -9,7 +9,7 @@
 % ### Project FORMFLYT: Two Body Keplerian Toolbox                    ###
 % ### Obtaining the eccentric anomaly by solving Kepler's Equation    ###
 % ###                                                                 ###
-% ### By Samuel Low (08-JUL-2021), DSO National Laboratories          ###
+% ### By Matthew Lo, Andrew Ng and Samuel Low (08-JUL-2021), DSO NL   ###
 % ###                                                                 ###
 % #######################################################################
 % #######################################################################

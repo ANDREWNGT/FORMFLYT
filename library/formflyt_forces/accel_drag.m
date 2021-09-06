@@ -12,7 +12,7 @@
 % ### is given in units (kg/m^3) with an altitude input (km). Valid   ###
 % ### only for altitudes between 86km to 1000km, and for Earth body.  ###
 % ###                                                                 ###
-% ### By Matthew Lo and Samuel Low (12-JUL-2021), DSO NL              ###
+% ### By Matthew Lo, Andrew Ng and Samuel Low (12-JUL-2021), DSO NL   ###
 % ###                                                                 ###
 % #######################################################################
 % #######################################################################

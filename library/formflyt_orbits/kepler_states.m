@@ -9,7 +9,7 @@
 % ### Project FORMFLYT: Two Body Keplerian Toolbox                    ###
 % ### Converting orbit elements into inertial position and velocity   ###
 % ###                                                                 ###
-% ### By Samuel Low (08-JUL-2021), DSO National Laboratories          ###
+% ### By Matthew Lo, Andrew Ng and Samuel Low (08-JUL-2021), DSO NL   ###
 % ###                                                                 ###
 % #######################################################################
 % #######################################################################

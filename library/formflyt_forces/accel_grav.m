@@ -9,7 +9,7 @@
 % ### Project FORMFLYT: Forces Toolbox                                ###
 % ### Computation of inverse square gravity force (two-body).         ###
 % ###                                                                 ###
-% ### By Matthew Lo and Samuel Low (12-JUL-2021), DSO NL              ###
+% ### By Matthew Lo, Andrew Ng and Samuel Low (12-JUL-2021), DSO NL   ###
 % ###                                                                 ###
 % #######################################################################
 % #######################################################################
