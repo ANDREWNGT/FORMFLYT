@@ -15,7 +15,7 @@
 % #######################################################################
 % #######################################################################
 
-function [accel_total] = accel_total( pos, vel, Cd, Ar, Ms, fJ, fD )
+function [accel_total] = accel_total( pos, vel, Cd, Ar, Ms, fJ, fD, thr )
 
 % Inputs: The following spacecraft parameters and the primary body radius.
 %         - pos -> Position vector (1x3) of the spacecraft
@@ -25,6 +25,7 @@ function [accel_total] = accel_total( pos, vel, Cd, Ar, Ms, fJ, fD )
 %         - Ms  -> Mass of the spacecraft (kg)
 %         - fJ  -> Flag (0 or 1) to toggle J2 perturbation
 %         - fD  -> Flag (0 or 1) to toggle atmospheric drag
+%         - thr -> Thrust vector (1x3) of the thruster (N)
 % Output: Acceleration vector (1x3) of the spacecraft due to J2 and drag.
 
 % Compute the final acceleration vector
@@ -39,6 +40,9 @@ end
 if fD == 1
     accel_total = accel_total + accel_drag( pos, vel, Cd, Ar, Ms );
 end
+
+% Finally, add the thruster force.
+accel_total = accel_total + (thr / Ms);
 
 end
 
