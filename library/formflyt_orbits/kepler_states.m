@@ -29,7 +29,7 @@ function [pos, vel, acc, trueAnom] = kepler_states(a, e, i, R, w, M, GM)
 % The general flow of the program, is to first solve for the radial
 % position and velocity (in the inertial frame) via Kepler's equation.
 % Thereafter, we will obtain the inertial coordinates in the Hill frame,
-% by performing a 3-1-3 Euler Angle rotation using an appropriate DCM.
+% by performing a 3-1-3 Euler Angle rotation using an appropriate DCM (rotation matrix).
 
 % First, let us solve for the eccentric anomaly.
 eccAnom = kepler_solver(M, e);

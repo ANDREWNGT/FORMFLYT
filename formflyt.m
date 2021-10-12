@@ -4,12 +4,14 @@
 % ###     LUMELITE ORBIT DYNAMICS AND CONTROL FOR FORMATION FLYING     ###
 % ###     ========================================================     ###
 % ###     By Matthew Lo, Andrew Ng, Samuel Low, and Dr Poh Eng Kee     ###
-% ###                 Last Updated: 6th September 2021                 ###
+% ###                                                                  ###
 % ###                                                                  ###
 % ########################################################################
 % ########################################################################
 
-clc; clear; close all;
+clc 
+clear 
+close all
 
 %% USER INPUTS
 
