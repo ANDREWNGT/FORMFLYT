@@ -154,9 +154,7 @@ orbT = sqrt(( 4 * (pi^2) * (a1^3) ) / GM);
 % Initialise an integer variable for thruster-mode count down.
 thruster_clock_2 = 0;
 thruster_clock_3 = 0;
-next_fire_time_2 = 0;
-next_fire_time_3 = 0;
-
+next_fire_time= 0;
 % BEGIN THE DYNAMICS LOOP
 
 for N = 1 : nSamples
@@ -202,8 +200,7 @@ for N = 1 : nSamples
     % Assume that orbital period of all 3 satellites are the same; effect
     % of radial displacement on period is negligible (~ E-13 which is tiny)
     current_time = N * dt;
-    % Corrections for satellite 2
-    if current_time < next_fire_time_2
+    if current_time < next_fire_time
         % Branch to skip firing as the thruster is cooling down.
         continue 
     else
@@ -211,11 +208,12 @@ for N = 1 : nSamples
         
         if thruster_clock_2 >= 300
             thruster_clock_2 =0;
-            next_fire_time_2 = current_time + orbT;
+            next_fire_time = current_time + orbT;
         else
             
         end
         thruster_clock_2 = thruster_clock_2 + dt;
+        thruster_clock_3 = thruster_clock_3 + dt;
     end
     
     % ####################################################################
@@ -287,7 +285,7 @@ title('Displacements of satellite 2 w.r.t 1', 'interpreter', 'latex', 'fontsize'
 L=legend([radial_plot intrack_plot crosstrack_plot], 'Radial', 'Intrack', 'Cross-track');
 L.FontSize=15;
 
-%% PLOT THE RADIAL, INTRACK, CROSS-TRACK OF SATELLITE 3 WRT 1
+%% PLOT THE RADIAL, INTRACK, CROSS-TRACK OF SATELLITE 2 WRT 1
 figure(2);
 hold;
 plot(posRIC3a(:,1));
