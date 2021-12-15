@@ -31,6 +31,9 @@ function [pf, vf] = prop_RK4_38( dt, pi, vi, Cd, Ar, Ms, fJ, fD, thrust )
 % - pf -> Final position vector (1x3) of the spacecraft (m)
 % - vf -> Final velocity vector (1x3) of the spacecraft (m)
 
+% rk4 is conducted for both position and velocity, denoted by variable 
+% names ending p and f.
+
 k1p = vi;
 k1v = accel_total( pi, vi, Cd, Ar, Ms, fJ, fD, thrust );
 

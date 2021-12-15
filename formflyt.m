@@ -19,8 +19,8 @@ close all
 numSats = 3;
 
 % Specify the duration and the time step of the dynamics simulation (s).
-tt = 1 * 86400;
-dt = 10.0;
+tt = 0.1 * 86400;
+dt = 60.0;
 time_steps=linspace(0, tt, tt/dt+1);
 % Specify thruster burn mode intervals (hot = firing, cool = cool-down).
 duration_hot  = 300.0;   % About 300s of burn time
@@ -29,46 +29,12 @@ duration_cool = 28500.0; % About 5 orbits of cool down
 % Specify the thruster's average force (N)
 thrust = 0.760;
 
+% Isp = 220 %s, from nanoavionics EPSS engine specs
 % Initialise the pointing error DCM. Note that in the dynamics loop, this
 % pointing error DCM should be re-initialised in each loop as a random
 % variable to simulate the pointing error of the spacecraft thruster.
 pointing_error_DCM = eye(3);
 
-% Input the initial osculating orbit elements for Satellite 1.
-a1  = 6925140;     % Semi-major axis (m) = 585E03 + 6371E03 
-e1  = 0.001;       % Eccentricity (unitless)
-i1  = 10.00;       % Inclination (degrees)
-w1  = 0.00;        % Arg of Periapsis (degrees)
-R1  = 70.00;       % Right Ascension (degrees)
-M1  = 46.654;      % Mean Anomaly (degrees)
-Cd1 = 2.2;         % Drag coefficient
-Ar1 = 0.374;       % Drag area (m^2)
-Ms1 = 17.90;       % Spacecraft mass (kg)
-Th1 = 0.00;        % Spacecraft thrust force (N)
-
-% Input the initial osculating orbit elements for Satellite 2.
-a2  = 6925140;     % Semi-major axis (m)
-e2  = 0.001;       % Eccentricity (unitless)
-i2  = 10.00;       % Inclination (degrees)
-w2  = 0.00;        % Arg of Periapsis (degrees)
-R2  = 72.00;       % Right Ascension (degrees)
-M2  = 43.925 ;     % Mean Anomaly (degrees)
-Cd2 = 2.2;         % Drag coefficient
-Ar2 = 0.374;       % Drag area (m^2)
-Ms2 = 17.90;       % Spacecraft mass (kg)
-Th2 = 0.00;        % Spacecraft thrust force (N)
-
-% Input the initial osculating orbit elements for Satellite 3.
-a3  = 6925140;     % Semi-major axis (m)
-e3  = 0.001;       % Eccentricity (unitless)
-i3  = 10.00;       % Inclination (degrees)
-w3  = 0.00;        % Arg of Periapsis (degrees)
-R3  = 70.00;       % Right Ascension (degrees)
-M3  = 44.996;      % Mean Anomaly (degrees)
-Cd3 = 2.2;         % Drag coefficient
-Ar3 = 0.374;       % Drag area (m^2)
-Ms3 = 17.90;       % Spacecraft mass (kg)
-Th3 = 0.00;        % Spacecraft thrust force (N)
 
 % Specify Satellite 2's RIC geometry requirements and tolerances (m)
 desired_R2 = 0.0;       % Desired radial separation of Sat 2
@@ -89,6 +55,73 @@ tolerance_C = 1000.0;
 f_J2 = 1; % Enable / disable J2
 f_Dg = 1; % Enable / disable drag
 
+% Toggle following flags to set initial conditions of satellites (0 =
+% already in final formation, 1 = in initial formation)
+f_initial = 1;
+%% Initial conditions for satellites
+% Input the initial osculating orbit elements for Satellite 1.
+a1  = 6925140;     % Semi-major axis (m) = 585E03 + 6371E03 
+e1  = 0.001;       % Eccentricity (unitless)
+i1  = 10.00;       % Inclination (degrees)
+w1  = 0.00;        % Arg of Periapsis (degrees)
+R1  = 70.00;       % Right Ascension (degrees)
+M1  = 46.654;      % Mean Anomaly (degrees)
+Cd1 = 2.2;         % Drag coefficient
+Ar1 = 0.374;       % Drag area (m^2)
+Ms1 = 17.90;       % Spacecraft mass (kg)
+Th1 = 0.00;        % Spacecraft thrust force (N)
+
+if f_initial == 0
+    % Input the initial osculating orbit elements for Satellite 2.
+    a2  = 6925140;     % Semi-major axis (m)
+    e2  = 0.001;       % Eccentricity (unitless)
+    i2  = 10.00;       % Inclination (degrees)
+    w2  = 0.00;        % Arg of Periapsis (degrees)
+    R2  = 72.00;       % Right Ascension (degrees)
+    M2  = 43.925 ;     % Mean Anomaly (degrees)
+    Cd2 = 2.2;         % Drag coefficient
+    Ar2 = 0.374;       % Drag area (m^2)
+    Ms2 = 17.90;       % Spacecraft mass (kg)
+    Th2 = 0.00;        % Spacecraft thrust force (N)
+    
+    % Input the initial osculating orbit elements for Satellite 3.
+    a3  = 6925140;     % Semi-major axis (m)
+    e3  = 0.001;       % Eccentricity (unitless)
+    i3  = 10.00;       % Inclination (degrees)
+    w3  = 0.00;        % Arg of Periapsis (degrees)
+    R3  = 70.00;       % Right Ascension (degrees)
+    M3  = 44.996;      % Mean Anomaly (degrees)
+    Cd3 = 2.2;         % Drag coefficient
+    Ar3 = 0.374;       % Drag area (m^2)
+    Ms3 = 17.90;       % Spacecraft mass (kg)
+    Th3 = 0.00;        % Spacecraft thrust force (N)
+    
+else
+    a2  = 6925140;     % Semi-major axis (m)
+    e2  = 0.001;       % Eccentricity (unitless)
+    i2  = 10.00;       % Inclination (degrees)
+    w2  = 0.00;        % Arg of Periapsis (degrees)
+    R2  = 70.00;       % Right Ascension (degrees)
+    M2  = 29.876 ;     % Mean Anomaly (degrees)
+    Cd2 = 2.2;         % Drag coefficient
+    Ar2 = 0.374;       % Drag area (m^2)
+    Ms2 = 17.90;       % Spacecraft mass (kg)
+    Th2 = 0.00;        % Spacecraft thrust force (N)
+    
+    % Input the initial osculating orbit elements for Satellite 3.
+    a3  = 6925140;     % Semi-major axis (m)
+    e3  = 0.001;       % Eccentricity (unitless)
+    i3  = 10.00;       % Inclination (degrees)
+    w3  = 0.00;        % Arg of Periapsis (degrees)
+    R3  = 70.00;       % Right Ascension (degrees)
+    M3  = 11.39;      % Mean Anomaly (degrees)
+    Cd3 = 2.2;         % Drag coefficient
+    Ar3 = 0.374;       % Drag area (m^2)
+    Ms3 = 17.90;       % Spacecraft mass (kg)
+    Th3 = 0.00;        % Spacecraft thrust force (N)
+    
+end
+    
 % ########################################################################
 % ########################################################################
 
@@ -114,7 +147,7 @@ end
 GM = 3.9860e+14;
 RE = 6378140.00;
 
-% Position, velocity, acceleration and true anomaly.
+% Position, velocity, acceleration and true anomaly in ECI coords.
 [pos1, vel1, acc1, nu1] = kepler_states(a1, e1, i1, R1, w1, M1, GM);
 [pos2, vel2, acc2, nu2] = kepler_states(a2, e2, i2, R2, w2, M2, GM);
 [pos3, vel3, acc3, nu3] = kepler_states(a3, e3, i3, R3, w3, M3, GM);
@@ -196,53 +229,51 @@ for N = 1 : nSamples
     % X axis - radial
     % Z axis - cross track
     % Y axis - in track/ along track
+    % ####################################################################
+    % Conduct a check to see whether satellite 2 or 3 has already reached
+    % the desired position using the error_R2, error_I2... variables. This
+    % can determine when to stop thrusters from firing. 
+    % if error_R3< tolerance_R
+    % Do something ....
     
     % ####################################################################
-    % KEEP TRACK OF WHETHER THRUSTER HAS ALREADY FIRED FOR >=300seconds. 
+    % KEEP TRACK OF WHETHER THRUSTER HAS ALREADY FIRED FOR >= 300 seconds. 
+    % If so, thruster has to rest for 5 orbits. 
+    % ####################################################################
     % Assume that orbital period of all 3 satellites are the same; effect
     % of radial displacement on period is negligible (~ E-13 which is tiny)
     current_time = N * dt;
-    % Corrections for satellite 2
+    
+    % Perform radial, in-track and cross-track corrections for satellite 2,
+    % Th2. Control solution outputs the 1X3 Thrust vector 'Th2'.
     if current_time < next_fire_time_2
-        % Branch to skip firing as the thruster is cooling down.
-        continue 
+        % Branch to skip firing as the thruster is cooling down. Do
+        % nothing!
     else
         % Branch to ignite thruster. 
-        
         if thruster_clock_2 >= 300
             thruster_clock_2 =0;
             next_fire_time_2 = current_time + orbT;
         else
-            
         end
         thruster_clock_2 = thruster_clock_2 + dt;
     end
-    
-    % ####################################################################
-    % PERFORM RADIAL CORRECTIONS HERE FOR SATELLITE 2 AND 3 
-    % CONTROL SOLUTION SHOULD BE A 1X3 THRUST VECTOR `Th2` AND `Th3`
-    % Be sure to keep track that the thruster for Lumelite can't exceed
-    % 300 seconds for each burn, before needing to rest for ~5 orbits.
-    
-    % ####################################################################
-    % ####################################################################
-    
-    % PERFORM IN-TRACK CORRECTIONS HERE FOR SATELLITE 2 AND 3
-    % CONTROL SOLUTION SHOULD BE A 1X3 THRUST VECTOR `Th2` AND `Th3`
-    % Be sure to keep track that the thruster for Lumelite can't exceed
-    % 300 seconds for each burn, before needing to rest for ~5 orbits.
-    
-    % ####################################################################
-    % ####################################################################
-    
-    % PERFORM CROSS-TRACK CORRECTIONS HERE FOR SATELLITE 2 AND 3
-    % CONTROL SOLUTION SHOULD BE A 1X3 THRUST VECTOR `Th2` AND `Th3`
-    % Be sure to keep track that the thruster for Lumelite can't exceed
-    % 300 seconds for each burn, before needing to rest for ~5 orbits.
-    
-    % ####################################################################
-    % ####################################################################
-    
+    %#####################################################################
+    % Repeat the process for satellite 3, Th3. Outputs thrust vector 'Th3'.
+    if current_time < next_fire_time_3
+        % Branch to skip firing as the thruster is cooling down. Do
+        % nothing!
+    else
+        % Branch to ignite thruster. 
+        
+        if thruster_clock_3 >= 300
+            thruster_clock_3 =0;
+            next_fire_time_3 = current_time + orbT;
+        else
+            
+        end
+        thruster_clock_3 = thruster_clock_3 + dt;
+    end
     % MAIN INTEGRATOR BELOW.
     
     % You should not need to change anything below in the propagator, your
@@ -269,6 +300,8 @@ for N = 1 : nSamples
     
 end
 
+fprintf("sat 2 intrack: %f km\n", posRIC2a(1,3)/1000)
+fprintf("sat 3 intrack: %f km", posRIC3a(1,3)/1000)
 %% PLOT THE RADIAL, INTRACK, CROSS-TRACK OF SATELLITE 2 WRT 1
 fh=figure(1);
 fh.WindowState = 'maximized';
@@ -277,23 +310,34 @@ box on
 grid minor
 hold on
 radial_plot = plot(time_steps, posRIC2a(:,1), 'r', 'LineWidth', 2);
-intrack_plot = plot(time_steps, posRIC2a(:,2), 'b', 'LineWidth', 2);
-crosstrack_plot = plot(time_steps, posRIC2a(:,3), 'g', 'LineWidth', 2);
+crosstrack_plot= plot(time_steps, posRIC2a(:,2), 'b', 'LineWidth', 2);
+intrack_plot= plot(time_steps, posRIC2a(:,3), 'g', 'LineWidth', 2);
 
 set(gca,'FontSize',15)
 xlabel('Time after ignition (s)','interpreter', 'latex', 'fontsize', 20, 'Rotation', 0)
 ylabel('Distance','interpreter', 'latex', 'fontsize', 20, 'Rotation', 90)
 title('Displacements of satellite 2 w.r.t 1', 'interpreter', 'latex', 'fontsize', 20, 'Rotation', 0)
-L=legend([radial_plot intrack_plot crosstrack_plot], 'Radial', 'Intrack', 'Cross-track');
+L=legend([radial_plot crosstrack_plot intrack_plot], 'Radial', 'Cross-track', 'Intrack');
 L.FontSize=15;
 
 %% PLOT THE RADIAL, INTRACK, CROSS-TRACK OF SATELLITE 3 WRT 1
-figure(2);
-hold;
-plot(posRIC3a(:,1));
-plot(posRIC3a(:,2));
-plot(posRIC3a(:,3));
-legend;
+fh=figure(2);
+fh.WindowState = 'maximized';
+
+box on
+grid minor
+hold on
+
+radial_plot = plot(time_steps, posRIC3a(:,1), 'r', 'LineWidth', 2);
+crosstrack_plot = plot(time_steps, posRIC3a(:,2), 'b', 'LineWidth', 2);
+intrack_plot = plot(time_steps, posRIC3a(:,3), 'g', 'LineWidth', 2);
+
+set(gca,'FontSize',15)
+xlabel('Time after ignition (s)','interpreter', 'latex', 'fontsize', 20, 'Rotation', 0)
+ylabel('Distance','interpreter', 'latex', 'fontsize', 20, 'Rotation', 90)
+title('Displacements of satellite 3 w.r.t 1', 'interpreter', 'latex', 'fontsize', 20, 'Rotation', 0)
+L=legend([radial_plot crosstrack_plot intrack_plot], 'Radial','Cross-track',  'Intrack');
+L.FontSize=15;
 
 %% FOR DEBUGGING...
 % CAN PLOT THE ORBIT ABOUT CENTRAL BODY USING THE PLOTTER BELOW TOO
