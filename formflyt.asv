@@ -19,16 +19,19 @@ close all
 numSats = 3;
 
 % Specify the duration and the time step of the dynamics simulation (s).
-tt = 0.1 * 86400;
+tt = 0.5 * 86400;
 dt = 60.0;
 time_steps=linspace(0, tt, tt/dt+1);
 % Specify thruster burn mode intervals (hot = firing, cool = cool-down).
 duration_hot  = 300.0;   % About 300s of burn time
 duration_cool = 28500.0; % About 5 orbits of cool down
 
+% Specify fire duration 
+duration_fire = 240.0;
 % Specify the thruster's average force (N)
 thrust = 0.760;
 
+% Isp = 220 %s, from nanoavionics EPSS engine specs
 % Initialise the pointing error DCM. Note that in the dynamics loop, this
 % pointing error DCM should be re-initialised in each loop as a random
 % variable to simulate the pointing error of the spacecraft thruster.
@@ -96,7 +99,6 @@ if f_initial == 0
     Th3 = 0.00;        % Spacecraft thrust force (N)
     
 else
-    %% WIP!!! (8.53am)
     a2  = 6925140;     % Semi-major axis (m)
     e2  = 0.001;       % Eccentricity (unitless)
     i2  = 10.00;       % Inclination (degrees)
@@ -114,7 +116,7 @@ else
     i3  = 10.00;       % Inclination (degrees)
     w3  = 0.00;        % Arg of Periapsis (degrees)
     R3  = 70.00;       % Right Ascension (degrees)
-    M3  = 11.5;      % Mean Anomaly (degrees)
+    M3  = 11.39;      % Mean Anomaly (degrees)
     Cd3 = 2.2;         % Drag coefficient
     Ar3 = 0.374;       % Drag area (m^2)
     Ms3 = 17.90;       % Spacecraft mass (kg)
@@ -195,6 +197,7 @@ next_fire_time_3 = 0;
 for N = 1 : nSamples
     
     % Fetch the current positions and velocities of the satellites.
+    % Cartesian coords.
     p1 = pos1a(N,:);
     v1 = vel1a(N,:);
     p2 = pos2a(N,:);
@@ -211,6 +214,10 @@ for N = 1 : nSamples
     
     % Compute the RIC for Satellite 2 as feedback into the control loop.
     pRIC2 = hill_dcm * (p2-p1).';
+
+    if isnan(pRIC2)
+        disp("HALT!")
+    end
     posRIC2a(N,:) = pRIC2;
     error_R2 = pRIC2(1) - desired_R2; % This should not exceed tolerance
     error_I2 = pRIC2(3) - desired_I2; % This should not exceed tolerance
@@ -246,15 +253,23 @@ for N = 1 : nSamples
     
     % Perform radial, in-track and cross-track corrections for satellite 2,
     % Th2. Control solution outputs the 1X3 Thrust vector 'Th2'.
+    %% Manuever plan: 
+    % Segment 1: Thruster burn in intrack direction to enter lower orbit.
+    % Allocate 120s of burn.
+    % Segment 2: Drift to catch reduce intrack separation to 100km.
+    % Segment 3: Thruster burn against intrack direction to reenter higher
+    % orbit. 120s of burn. 
     if current_time < next_fire_time_2
         % Branch to skip firing as the thruster is cooling down. Do
         % nothing!
     else
-        % Branch to ignite thruster. 
-        if thruster_clock_2 >= 300
-            thruster_clock_2 =0;
-            next_fire_time_2 = current_time + orbT;
+        if thruster_clock_2 >= duration_hot
+            % Branch to determine when to next ignite thruster. 
+            thruster_clock_2 = 0;
+            next_fire_time_2 = current_time + duration_cool;
         else
+            % Branch to ignite thruster. 
+            Th2 = thrust.*[0, -1,0];
         end
         thruster_clock_2 = thruster_clock_2 + dt;
     end
@@ -286,6 +301,9 @@ for N = 1 : nSamples
     pos1a(N+1,:) = p1f;
     vel1a(N+1,:) = v1f;
     
+    if N==155
+        disp("HALT!")
+    end
     % Runge-Kutta 4th Order (RK4) Propagator (3/8 Rule Variant).
     % This code below is meant to only propagate LEO 2.
     [p2f, v2f] = prop_RK4_38( dt, p2, v2, Cd2, Ar2, Ms2, f_J2, f_Dg, Th2 );
@@ -339,7 +357,6 @@ title('Displacements of satellite 3 w.r.t 1', 'interpreter', 'latex', 'fontsize'
 L=legend([radial_plot crosstrack_plot intrack_plot], 'Radial','Cross-track',  'Intrack');
 L.FontSize=15;
 
-close all
 %% FOR DEBUGGING...
 % CAN PLOT THE ORBIT ABOUT CENTRAL BODY USING THE PLOTTER BELOW TOO
 
