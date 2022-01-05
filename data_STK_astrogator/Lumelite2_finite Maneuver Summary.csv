@@ -1,0 +1,12 @@
+"Maneuver Number","Segment","Start Time (UTCG)","Stop Time (UTCG)","Duration (sec)","Delta V (m/sec)","Fuel Used (kg)","Thruster/Engine"
+1,"Get_into_initial_intrack_displacement.Burn1",8 Dec 2021 16:00:00.000,8 Dec 2021 16:00:42.554,42.554,1.730149,0.015,"Lumelite_Engine"
+2,"Second_burn_to_return_to_original_plane.Burn2",22 Dec 2021 16:00:42.554,22 Dec 2021 16:01:31.564,49.011,1.994397,0.017,"Lumelite_Engine"
+3,"1st_RAAN_shift.Burn",22 Dec 2021 16:37:09.316,22 Dec 2021 16:39:11.988,122.672,5.000000,0.043,"Lumelite_Engine"
+4,"2nd_RAAN_shift.Burn",22 Dec 2021 18:12:37.275,22 Dec 2021 18:16:08.587,211.312,8.640172,0.074,"Lumelite_Engine"
+5,"3rd_RAAN_shift.Burn",22 Dec 2021 19:48:05.211,22 Dec 2021 19:51:23.453,198.241,8.137300,0.070,"Lumelite_Engine"
+6,"4th_RAAN_shift.Burn",22 Dec 2021 21:23:33.174,22 Dec 2021 21:25:27.634,114.461,4.712344,0.040,"Lumelite_Engine"
+7,"5th_RAAN_shift.Burn",22 Dec 2021 22:59:01.093,22 Dec 2021 23:01:52.053,170.960,7.057624,0.060,"Lumelite_Engine"
+8,"6th_RAAN_shift.Burn",23 Dec 2021 00:34:29.011,23 Dec 2021 00:36:50.200,141.189,5.846062,0.050,"Lumelite_Engine"
+9,"7th_RAAN_shift.Burn",23 Dec 2021 02:09:56.918,23 Dec 2021 02:12:36.696,159.777,6.634901,0.056,"Lumelite_Engine"
+10,"8th_RAAN_shift.Burn",23 Dec 2021 03:45:24.807,23 Dec 2021 03:48:40.277,195.469,8.144886,0.069,"Lumelite_Engine"
+

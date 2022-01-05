@@ -1,0 +1,8 @@
+"Segment Name","Segment Type","Start Time (UTCG)","Stop Time (UTCG)"
+"Initial_State","InitialState",8 Dec 2021 04:00:00.000,8 Dec 2021 04:00:00.000
+"Propagate","Propagate",8 Dec 2021 04:00:00.000,8 Dec 2021 16:00:00.000
+"Get_into_initial_intrack_displacement.Burn1","Maneuver:Finite",8 Dec 2021 16:00:00.000,8 Dec 2021 16:01:05.075
+"Get_into_initial_intrack_displacement.Drift","Propagate",8 Dec 2021 16:01:05.075,22 Dec 2021 16:01:05.075
+"Second_burn_to_return_to_original_plane.Burn2","Maneuver:Finite",22 Dec 2021 16:01:05.075,22 Dec 2021 16:01:46.475
+"Propagate1","Propagate",22 Dec 2021 16:01:46.475,11 Jan 2022 16:01:46.475
+

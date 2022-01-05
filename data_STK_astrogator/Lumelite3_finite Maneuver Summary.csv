@@ -1,0 +1,4 @@
+"Maneuver Number","Segment","Start Time (UTCG)","Stop Time (UTCG)","Duration (sec)","Delta V (m/sec)","Fuel Used (kg)","Thruster/Engine"
+1,"Get_into_initial_intrack_displacement.Burn1",8 Dec 2021 16:00:00.000,8 Dec 2021 16:01:05.075,65.075,2.646366,0.023,"Lumelite_Engine"
+2,"Second_burn_to_return_to_original_plane.Burn2",22 Dec 2021 16:01:05.075,22 Dec 2021 16:01:46.475,41.401,1.685313,0.015,"Lumelite_Engine"
+

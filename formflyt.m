@@ -17,11 +17,11 @@ close all
 
 % Specify the number of satellites.
 numSats = 3;
-
+days = 14;
 % Specify the duration and the time step of the dynamics simulation (s).
-tt = 0.5 * 86400;
+tt = days * 86400;
 dt = 60.0;
-time_steps=linspace(0, tt, tt/dt+1);
+time_steps= linspace(0, tt, tt/dt+1);
 % Specify thruster burn mode intervals (hot = firing, cool = cool-down).
 duration_hot  = 300.0;   % About 300s of burn time
 duration_cool = 28500.0; % About 5 orbits of cool down
@@ -30,8 +30,9 @@ duration_cool = 28500.0; % About 5 orbits of cool down
 duration_fire = 240.0;
 % Specify the thruster's average force (N)
 thrust = 0.760;
-
-% Isp = 220 %s, from nanoavionics EPSS engine specs
+g0=9.80665;
+Isp = 220; %s, from nanoavionics EPSS engine specs
+fuel_consumption = thrust / (Isp * g0); %kg/s
 % Initialise the pointing error DCM. Note that in the dynamics loop, this
 % pointing error DCM should be re-initialised in each loop as a random
 % variable to simulate the pointing error of the spacecraft thruster.
@@ -55,7 +56,7 @@ tolerance_C = 1000.0;
 
 % Toggle the following perturbation flags (0 = False, 1 = True).
 f_J2 = 1; % Enable / disable J2
-f_Dg = 1; % Enable / disable drag
+f_Dg = 0; % Enable / disable drag
 
 % Toggle following flags to set initial conditions of satellites (0 =
 % already in final formation, 1 = in initial formation)
@@ -179,7 +180,7 @@ posRIC3a = zeros( nSamples, 3 );
 
 % Initialise the estimated Keplerian orbit period of LEO1 (for reference)
 orbT = sqrt(( 4 * (pi^2) * (a1^3) ) / GM);
-
+recharge_time = 5 * orbT; %5 orbits needed to recharge for next firing. 
 % ########################################################################
 % ########################################################################
 
@@ -275,6 +276,15 @@ for N = 1 : nSamples
     end
     %#####################################################################
     % Repeat the process for satellite 3, Th3. Outputs thrust vector 'Th3'.
+    
+    %% Manuever plan for satellite 3: 
+    % Segment 1: Propagate for 12 hours. 
+    % Segment 2: Thruster burn against intrack direction to enter higher
+    % orbit. 65s of burn. 
+    % Segment 3: Drift to catch reduce intrack separation to 200km.
+    % Segment 4: Thruster burn against intrack direction to reenter higher
+    % orbit. 45s of burn. 
+    
     if current_time < next_fire_time_3
         % Branch to skip firing as the thruster is cooling down. Do
         % nothing!
@@ -301,9 +311,9 @@ for N = 1 : nSamples
     pos1a(N+1,:) = p1f;
     vel1a(N+1,:) = v1f;
     
-    if N==153
-        disp("HALT!")
-    end
+%     if N==153
+%         disp("HALT!")
+%     end
     % Runge-Kutta 4th Order (RK4) Propagator (3/8 Rule Variant).
     % This code below is meant to only propagate LEO 2.
     [p2f, v2f] = prop_RK4_38( dt, p2, v2, Cd2, Ar2, Ms2, f_J2, f_Dg, Th2 );
