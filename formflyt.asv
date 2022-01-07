@@ -18,7 +18,7 @@ close all
 
 % Specify the number of satellites.
 numSats = 3;
-days = 20;
+days = 14;
 % Specify the duration and the time step of the dynamics simulation (s).
 tt = days * 86400;
 dt = 60.0;
@@ -307,7 +307,7 @@ for N = 1 : nSamples
     % Segment 3: Drift to catch reduce intrack separation to 200km.
     % Segment 4: Thruster burn against intrack direction to reenter higher
     % orbit. 45s of burn. 
-    if current_time >= lum3_schedule(lum3_schedule_index) && lum3_schedule_index < lum3_num_segments
+    if current_time >= lum3_schedule(lum3_schedule_index)  
         lum3_schedule_index = lum3_schedule_index + 1;
     end
     
@@ -393,8 +393,8 @@ radial_plot = plot(time_steps, posRIC3a(:,1), 'r', 'LineWidth', 2);
 crosstrack_plot = plot(time_steps, posRIC3a(:,2), 'b', 'LineWidth', 2);
 intrack_plot = plot(time_steps, posRIC3a(:,3), 'g', 'LineWidth', 2);
 
-plot(43200, 0, 'kx', 'MarkerSize', 10)
-plot(1252865.075, 0, 'kx', 'MarkerSize', 10)
+plot([43200 0], 'kx')
+plot([1252865.075 0], '
 set(gca,'FontSize',15)
 xlabel('Time after ignition (s)','interpreter', 'latex', 'fontsize', 20, 'Rotation', 0)
 ylabel('Distance','interpreter', 'latex', 'fontsize', 20, 'Rotation', 90)

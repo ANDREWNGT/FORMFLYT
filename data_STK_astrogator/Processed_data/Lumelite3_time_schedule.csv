@@ -1,0 +1,7 @@
+,Segment Name,Start Time (UTCG),Stop Time (UTCG),Time from mission start (s),segment_duration
+0,Initial_State,2021-12-08 04:00:00.000,2021-12-08 04:00:00.000,0.0,0.0
+1,Propagate,2021-12-08 04:00:00.000,2021-12-08 16:00:00.000,0.0,43200.0
+2,Get_into_initial_intrack_displacement.Burn1,2021-12-08 16:00:00.000,2021-12-08 16:01:05.075,43200.0,65.075
+3,Get_into_initial_intrack_displacement.Drift,2021-12-08 16:01:05.075,2021-12-22 16:01:05.075,43265.075000000004,1209600.0
+4,Second_burn_to_return_to_original_plane.Burn2,2021-12-22 16:01:05.075,2021-12-22 16:01:46.475,1252865.0750000002,41.400000000000006
+5,Propagate1,2021-12-22 16:01:46.475,2022-01-11 16:01:46.475,1252906.475,1728000.0
