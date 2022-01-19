@@ -21,7 +21,7 @@ numSats = 3;
 days = 20;
 % Specify the duration and the time step of the dynamics simulation (s).
 tt = days * 86400;
-dt = 60.0;
+dt = 5.0;
 time_steps= linspace(0, tt, tt/dt+1);
 % Specify thruster burn mode intervals (hot = firing, cool = cool-down).
 duration_hot  = 300.0;   % About 300s of burn time
@@ -94,7 +94,7 @@ if f_initial == 0
     Cd2 = 2.2;         % Drag coefficient
     Ar2 = 0.374;       % Drag area (m^2)
     Ms2 = 17.90;       % Spacecraft mass (kg)
-    Th2 = 0.00;        % Spacecraft thrust force (N)
+    Th2 = [0 0 0];     % Spacecraft thrust force vector(N)
     
     % Input the initial osculating orbit elements for Satellite 3.
     a3  = 6925140;     % Semi-major axis (m)
@@ -106,7 +106,7 @@ if f_initial == 0
     Cd3 = 2.2;         % Drag coefficient
     Ar3 = 0.374;       % Drag area (m^2)
     Ms3 = 17.90;       % Spacecraft mass (kg)
-    Th3 = 0.00;        % Spacecraft thrust force (N)
+    Th3 = [0 0 0];     % Spacecraft thrust force vector(N)
     
 else
     a2  = 6925140;     % Semi-major axis (m)
@@ -118,7 +118,7 @@ else
     Cd2 = 2.2;         % Drag coefficient
     Ar2 = 0.374;       % Drag area (m^2)
     Ms2 = 17.90;       % Spacecraft mass (kg)
-    Th2 = 0.00;        % Spacecraft thrust force (N)
+    Th2 = [0 0 0];        % Spacecraft thrust force (N)
     
     % Input the initial osculating orbit elements for Satellite 3.
     a3  = 6925140;     % Semi-major axis (m)
@@ -130,7 +130,7 @@ else
     Cd3 = 2.2;         % Drag coefficient
     Ar3 = 0.374;       % Drag area (m^2)
     Ms3 = 17.90;       % Spacecraft mass (kg)
-    Th3 = 0.00;        % Spacecraft thrust force (N)
+    Th3 = [0 0 0];        % Spacecraft thrust force (N)
     
 end
     
@@ -206,14 +206,19 @@ next_fire_time_3 = 0;
 
 lum2_segment = lumelite2_data{:, "Segment Name"};
 lum2_schedule = lumelite2_data{:,"Time from mission start (s)"};
+lum2_segment_durations = lumelite2_data{:,"segment_duration"};
 lum2_num_segments= size(lum2_segment, 1);
-lum2_ismanuever = isnan(lumelite2_data{:, "Delta V (m/sec)"});
-
+lum2_ismanuever = ~isnan(lumelite2_data{:, "Delta V (m/sec)"});
+lum2_next_segment_start = 0;
+Th2_total = zeros(3 , size(time_steps,2));
 
 lum3_segment = lumelite3_data{:, "Segment Name"};
 lum3_schedule = lumelite3_data{:,"Time from mission start (s)"};
+lum3_segment_durations = lumelite3_data{:,"segment_duration"};
 lum3_num_segments = size(lum3_segment, 1);
-lum3_ismanuever = isnan(lumelite3_data{:, "Delta V (m/sec)"});
+lum3_ismanuever = ~isnan(lumelite3_data{:, "Delta V (m/sec)"});
+lum3_next_segment_start = 0;
+Th3_total=zeros(3,size(time_steps,2));
 %% BEGIN THE DYNAMICS LOOP
 lum2_schedule_index=1;
 lum3_schedule_index=1;
@@ -273,7 +278,7 @@ for N = 1 : nSamples
     % ####################################################################
     % Assume that orbital period of all 3 satellites are the same; effect
     % of radial displacement on period is negligible (~ E-13 which is tiny)
-    current_time = N * dt;
+    current_time = (N-1) * dt;
     
     % Perform radial, in-track and cross-track corrections for satellite 2,
     % Th2. Control solution outputs the 1X3 Thrust vector 'Th2'.
@@ -283,20 +288,43 @@ for N = 1 : nSamples
     % Segment 2: Drift to catch reduce intrack separation to 100km.
     % Segment 3: Thruster burn against intrack direction to reenter higher
     % orbit. 120s of burn. 
-    if current_time < next_fire_time_2
-        % Branch to skip firing as the thruster is cooling down. Do
-        % nothing!
-    else
-        if thruster_clock_2 >= duration_hot
-            % Branch to determine when to next ignite thruster. 
-            thruster_clock_2 = 0;
-            next_fire_time_2 = current_time + duration_cool;
-        elseif thruster_clock_2 < 120
-            % Branch to ignite thruster. 
-            Th2 = thrust.*[0, -1,0];
+    if current_time <= lum2_next_segment_start
+        %Branch to keep the thrust vector as before.
+    elseif current_time >= lum2_schedule(lum2_schedule_index) + lum2_segment_durations(lum2_schedule_index) 
+        Th2=[0 0 0];
+        lum2_schedule_index = lum2_schedule_index + 1;
+        if lum2_schedule_index < lum2_num_segments - 1
+            % Branch for mission segments up to last mission segment
+            lum2_next_segment_start = lum2_schedule(lum2_schedule_index + 1);
         end
-        thruster_clock_2 = thruster_clock_2 + dt;
     end
+    if lum2_ismanuever(lum2_schedule_index)==1
+        % Fire thruster as this is a manuever.
+        Th2 = [ lumelite2_data{lum2_schedule_index, "RIC X Thrust Component"},...
+                lumelite2_data{lum2_schedule_index, "RIC Y Thrust Component"},...
+                lumelite2_data{lum2_schedule_index, "RIC Z Thrust Component"}
+            ];
+    end
+    
+%     fprintf("Mission leg: %d, Current time: %d sec. Thrust vector: ", lum2_schedule_index, current_time)
+%     disp(Th2)
+%     fprintf("\n")
+    Th2_total(:, N)=Th2';
+    
+%     if current_time < next_fire_time_2
+%         % Branch to skip firing as the thruster is cooling down. Do
+%         % nothing!
+%     else
+%         if thruster_clock_2 >= duration_hot
+%             % Branch to determine when to next ignite thruster. 
+%             thruster_clock_2 = 0;
+%             next_fire_time_2 = current_time + duration_cool;
+%         elseif thruster_clock_2 < 120
+%             % Branch to ignite thruster. 
+%             Th2 = thrust.*[0, -1,0];
+%         end
+%         thruster_clock_2 = thruster_clock_2 + dt;
+%     end
     %#####################################################################
     % Repeat the process for satellite 3, Th3. Outputs thrust vector 'Th3'.
     
@@ -304,20 +332,31 @@ for N = 1 : nSamples
     % Segment 1: Propagate for 12 hours. 
     % Segment 2: Thruster burn against intrack direction to enter higher
     % orbit. 65s of burn. 
-    % Segment 3: Drift to catch reduce intrack separation to 200km.
+    % Segment 3: Drift to reduce intrack separation to 200km.
     % Segment 4: Thruster burn against intrack direction to reenter higher
-    % orbit. 45s of burn. 
-    if current_time >= lum3_schedule(lum3_schedule_index) && lum3_schedule_index < lum3_num_segments
+    % orbit. 45s of burn.
+    if current_time <= lum3_next_segment_start
+        %Branch to keep the thrust vector as before.
+    elseif current_time >= lum3_schedule(lum3_schedule_index) + lum3_segment_durations(lum3_schedule_index) 
+        Th3=[0 0 0];
         lum3_schedule_index = lum3_schedule_index + 1;
+        if lum3_schedule_index < lum3_num_segments - 1
+            % Branch for mission segments up to last mission segment
+            lum3_next_segment_start = lum3_schedule(lum3_schedule_index + 1);
+        end
     end
-    
-    if lum3_ismanuever(lum3_schedule_index)~=1
+    if lum3_ismanuever(lum3_schedule_index)==1
         % Fire thruster as this is a manuever.
         Th3 = [ lumelite3_data{lum3_schedule_index, "RIC X Thrust Component"},...
                 lumelite3_data{lum3_schedule_index, "RIC Y Thrust Component"},...
                 lumelite3_data{lum3_schedule_index, "RIC Z Thrust Component"}
             ];
     end
+    
+%     fprintf("Mission leg: %d, Current time: %d sec. Thrust vector: ", lum3_schedule_index, current_time)
+%     disp(Th3)
+%     fprintf("\n")
+    Th3_total(:, N)=Th3';
 %     if current_time < next_fire_time_3
 %         % Branch to skip firing as the thruster is cooling down. Do
 %         % nothing!
@@ -370,9 +409,11 @@ fh.WindowState = 'maximized';
 box on
 grid minor
 hold on
-radial_plot = plot(time_steps, posRIC2a(:,1), 'r', 'LineWidth', 2);
-crosstrack_plot= plot(time_steps, posRIC2a(:,2), 'b', 'LineWidth', 2);
-intrack_plot= plot(time_steps, posRIC2a(:,3), 'g', 'LineWidth', 2);
+radial_plot = plot(time_steps, posRIC2a(:,1), 'r', 'LineWidth', 1);
+crosstrack_plot= plot(time_steps, posRIC2a(:,2), 'b', 'LineWidth', 1);
+intrack_plot= plot(time_steps, posRIC2a(:,3), 'g', 'LineWidth', 1);
+xline(43200)
+xline(1252842.554)
 
 set(gca,'FontSize',15)
 xlabel('Time after ignition (s)','interpreter', 'latex', 'fontsize', 20, 'Rotation', 0)
@@ -389,17 +430,63 @@ box on
 grid minor
 hold on
 
-radial_plot = plot(time_steps, posRIC3a(:,1), 'r', 'LineWidth', 2);
-crosstrack_plot = plot(time_steps, posRIC3a(:,2), 'b', 'LineWidth', 2);
-intrack_plot = plot(time_steps, posRIC3a(:,3), 'g', 'LineWidth', 2);
-
-plot(43200, 0, 'kx', 'MarkerSize', 10)
-plot(1252865.075, 0, 'kx', 'MarkerSize', 10)
+radial_plot = plot(time_steps, posRIC3a(:,1), 'r', 'LineWidth', 1);
+crosstrack_plot = plot(time_steps, posRIC3a(:,2), 'b', 'LineWidth', 1);
+intrack_plot = plot(time_steps, posRIC3a(:,3), 'g', 'LineWidth', 1);
+xline(43200)
+xline(1252865.075)
+%plot(43200, 0, 'kx', 'MarkerSize', 10) %First thruster fire
+%plot(1252865.075, 0, 'kx', 'MarkerSize', 10) %Second thruster fire. 
 set(gca,'FontSize',15)
 xlabel('Time after ignition (s)','interpreter', 'latex', 'fontsize', 20, 'Rotation', 0)
 ylabel('Distance','interpreter', 'latex', 'fontsize', 20, 'Rotation', 90)
 title('Displacements of satellite 3 w.r.t 1', 'interpreter', 'latex', 'fontsize', 20, 'Rotation', 0)
 L=legend([radial_plot crosstrack_plot intrack_plot], 'Radial','Cross-track',  'Intrack');
+L.FontSize=15;
+
+%% PLOT THE thrust vector over time of SATELLITE 2 
+fh=figure(3);
+fh.WindowState = 'maximized';
+
+box on
+grid minor
+hold on
+
+x_plot = plot(time_steps, Th2_total(1,:), 'xr', 'LineWidth', 1);
+y_plot = plot(time_steps, Th2_total(2,:), 'xb', 'LineWidth', 1);
+z_plot = plot(time_steps, Th2_total(3,:), 'xg', 'LineWidth', 1);
+xline(43200)
+xline(1252842.554)
+%plot(43200, 0, 'kx', 'MarkerSize', 10) %First thruster fire
+%plot(1252865.075, 0, 'kx', 'MarkerSize', 10) %Second thruster fire. 
+set(gca,'FontSize',15)
+xlabel('Time after ignition (s)','interpreter', 'latex', 'fontsize', 20, 'Rotation', 0)
+ylabel('Thrust','interpreter', 'latex', 'fontsize', 20, 'Rotation', 90)
+title('Thrust vector of satellite 2', 'interpreter', 'latex', 'fontsize', 20, 'Rotation', 0)
+L=legend([x_plot y_plot z_plot], 'x', 'y', 'z');
+L.FontSize=15;
+
+
+%% PLOT THE thrust vector over time of SATELLITE 3 
+fh=figure(4);
+fh.WindowState = 'maximized';
+
+box on
+grid minor
+hold on
+
+x_plot = plot(time_steps, Th3_total(1,:), 'xr', 'LineWidth', 1);
+y_plot = plot(time_steps, Th3_total(2,:), 'xb', 'LineWidth', 1);
+z_plot = plot(time_steps, Th3_total(3,:), 'xg', 'LineWidth', 1);
+xline(43200)
+xline(1252865.075)
+%plot(43200, 0, 'kx', 'MarkerSize', 10) %First thruster fire
+%plot(1252865.075, 0, 'kx', 'MarkerSize', 10) %Second thruster fire. 
+set(gca,'FontSize',15)
+xlabel('Time after ignition (s)','interpreter', 'latex', 'fontsize', 20, 'Rotation', 0)
+ylabel('Thrust','interpreter', 'latex', 'fontsize', 20, 'Rotation', 90)
+title('Thrust vector of satellite 3', 'interpreter', 'latex', 'fontsize', 20, 'Rotation', 0)
+L=legend([x_plot y_plot z_plot], 'x', 'y', 'z');
 L.FontSize=15;
 
 %% FOR DEBUGGING...
