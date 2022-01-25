@@ -21,7 +21,7 @@ numSats = 3;
 days = 20;
 % Specify the duration and the time step of the dynamics simulation (s).
 tt = days * 86400;
-dt = 5.0;
+dt = 1.0;
 time_steps= linspace(0, tt, tt/dt+1);
 % Specify thruster burn mode intervals (hot = firing, cool = cool-down).
 duration_hot  = 300.0;   % About 300s of burn time
@@ -67,6 +67,10 @@ f_initial = 1;
 folder_path=".\data_STK_astrogator\Processed_data";
 lumelite2_data=readtable(folder_path+"\Lumelite2_final_summary.xlsx", "VariableNamingRule","preserve");
 lumelite3_data=readtable(folder_path+"\Lumelite3_final_summary.xlsx", "VariableNamingRule","preserve");
+
+lumelite2_true_ephem = readtable(folder_path+"\Lumelite2_ground_truth.csv", "VariableNamingRule","preserve");
+lumelite3_true_ephem = readtable(folder_path+"\Lumelite3_ground_truth.csv", "VariableNamingRule","preserve");
+
 %Example to extract column--> lumelite2_data{:, column_name};
 
 
@@ -219,6 +223,7 @@ lum3_num_segments = size(lum3_segment, 1);
 lum3_ismanuever = ~isnan(lumelite3_data{:, "Delta V (m/sec)"});
 lum3_next_segment_start = 0;
 Th3_total=zeros(3,size(time_steps,2));
+
 %% BEGIN THE DYNAMICS LOOP
 lum2_schedule_index=1;
 lum3_schedule_index=1;
@@ -402,6 +407,11 @@ end
 
 fprintf("sat 2 intrack: %f km\n", posRIC2a(1,3)/1000)
 fprintf("sat 3 intrack: %f km", posRIC3a(1,3)/1000)
+
+%% Process the ground truth for plotting
+true_ephem_time_steps_2 = lumelite2_true_ephem.('Time from mission start (s)');
+true_ephem_time_steps_3 = lumelite3_true_ephem.('Time from mission start (s)');
+
 %% PLOT THE RADIAL, INTRACK, CROSS-TRACK OF SATELLITE 2 WRT 1
 fh=figure(1);
 fh.WindowState = 'maximized';
@@ -412,6 +422,12 @@ hold on
 radial_plot = plot(time_steps, posRIC2a(:,1), 'r', 'LineWidth', 1);
 crosstrack_plot= plot(time_steps, posRIC2a(:,2), 'b', 'LineWidth', 1);
 intrack_plot= plot(time_steps, posRIC2a(:,3), 'g', 'LineWidth', 1);
+
+radial_plot_STK = plot(true_ephem_time_steps_2, lumelite2_true_ephem.('Radial (km)').*1000, 'rx', 'MarkerSize', 5);
+crosstrack_plot_STK = plot(true_ephem_time_steps_2, lumelite2_true_ephem.('Cross-Track (km)').*1000, 'bx', 'MarkerSize', 5);
+intrack_plot_STK = plot(true_ephem_time_steps_2, lumelite2_true_ephem.('In-Track (km)').* 1000, 'gx', 'MarkerSize', 5);
+
+
 xline(43200)
 xline(1252842.554)
 
@@ -419,7 +435,9 @@ set(gca,'FontSize',15)
 xlabel('Time after ignition (s)','interpreter', 'latex', 'fontsize', 20, 'Rotation', 0)
 ylabel('Distance','interpreter', 'latex', 'fontsize', 20, 'Rotation', 90)
 title('Displacements of satellite 2 w.r.t 1', 'interpreter', 'latex', 'fontsize', 20, 'Rotation', 0)
-L=legend([radial_plot crosstrack_plot intrack_plot], 'Radial', 'Cross-track', 'Intrack');
+L=legend([radial_plot crosstrack_plot intrack_plot radial_plot_STK ...
+    crosstrack_plot_STK intrack_plot_STK], 'Radial', 'Cross-track', 'Intrack', ...
+          'Radial STK', 'Cross-track STK', 'Intrack STK');
 L.FontSize=15;
 
 %% PLOT THE RADIAL, INTRACK, CROSS-TRACK OF SATELLITE 3 WRT 1
@@ -433,6 +451,12 @@ hold on
 radial_plot = plot(time_steps, posRIC3a(:,1), 'r', 'LineWidth', 1);
 crosstrack_plot = plot(time_steps, posRIC3a(:,2), 'b', 'LineWidth', 1);
 intrack_plot = plot(time_steps, posRIC3a(:,3), 'g', 'LineWidth', 1);
+
+radial_plot_STK = plot(true_ephem_time_steps_3, lumelite3_true_ephem.('Radial (km)').*1000, 'rx', 'MarkerSize', 5);
+crosstrack_plot_STK = plot(true_ephem_time_steps_3, lumelite3_true_ephem.('Cross-Track (km)').*1000, 'bx', 'MarkerSize', 5);
+intrack_plot_STK = plot(true_ephem_time_steps_3, lumelite3_true_ephem.('In-Track (km)').* 1000, 'gx', 'MarkerSize', 5);
+
+
 xline(43200)
 xline(1252865.075)
 %plot(43200, 0, 'kx', 'MarkerSize', 10) %First thruster fire
@@ -441,8 +465,12 @@ set(gca,'FontSize',15)
 xlabel('Time after ignition (s)','interpreter', 'latex', 'fontsize', 20, 'Rotation', 0)
 ylabel('Distance','interpreter', 'latex', 'fontsize', 20, 'Rotation', 90)
 title('Displacements of satellite 3 w.r.t 1', 'interpreter', 'latex', 'fontsize', 20, 'Rotation', 0)
-L=legend([radial_plot crosstrack_plot intrack_plot], 'Radial','Cross-track',  'Intrack');
+L=legend([radial_plot crosstrack_plot intrack_plot radial_plot_STK ...
+    crosstrack_plot_STK intrack_plot_STK], 'Radial', 'Cross-track', 'Intrack', ...
+          'Radial STK', 'Cross-track STK', 'Intrack STK');
+      
 L.FontSize=15;
+
 
 %% PLOT THE thrust vector over time of SATELLITE 2 
 fh=figure(3);
