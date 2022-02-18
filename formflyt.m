@@ -305,9 +305,9 @@ for N = 1 : nSamples
     end
     if lum2_ismanuever(lum2_schedule_index)==1
         % Fire thruster as this is a manuever.
-        Th2 = [ lumelite2_data{lum2_schedule_index, "RIC X Thrust Component"},...
-                lumelite2_data{lum2_schedule_index, "RIC Y Thrust Component"},...
-                lumelite2_data{lum2_schedule_index, "RIC Z Thrust Component"}
+        Th2 = [ lumelite2_data{lum2_schedule_index, "RIC X Thrust Component"} * thrust,...
+                lumelite2_data{lum2_schedule_index, "RIC Y Thrust Component"} * thrust,...
+                lumelite2_data{lum2_schedule_index, "RIC Z Thrust Component"} * thrust
             ];
     end
     
@@ -352,9 +352,9 @@ for N = 1 : nSamples
     end
     if lum3_ismanuever(lum3_schedule_index)==1
         % Fire thruster as this is a manuever.
-        Th3 = [ lumelite3_data{lum3_schedule_index, "RIC X Thrust Component"},...
-                lumelite3_data{lum3_schedule_index, "RIC Y Thrust Component"},...
-                lumelite3_data{lum3_schedule_index, "RIC Z Thrust Component"}
+        Th3 = [ lumelite3_data{lum3_schedule_index, "RIC X Thrust Component"} * thrust,...
+                lumelite3_data{lum3_schedule_index, "RIC Y Thrust Component"} * thrust,...
+                lumelite3_data{lum3_schedule_index, "RIC Z Thrust Component"} * thrust
             ];
     end
     
@@ -405,6 +405,8 @@ for N = 1 : nSamples
     
 end
 
+[instant_thrust_2, fire_indices_2] = instantaneous_thrust_when_firing(Th2_total);
+[instant_thrust_3, fire_indices_3] = instantaneous_thrust_when_firing(Th3_total);
 fprintf("sat 2 intrack: %f km\n", posRIC2a(1,3)/1000)
 fprintf("sat 3 intrack: %f km", posRIC3a(1,3)/1000)
 
@@ -419,13 +421,13 @@ fh.WindowState = 'maximized';
 box on
 grid minor
 hold on
-radial_plot = plot(time_steps, posRIC2a(:,1), 'r', 'LineWidth', 1);
-crosstrack_plot= plot(time_steps, posRIC2a(:,2), 'b', 'LineWidth', 1);
-intrack_plot= plot(time_steps, posRIC2a(:,3), 'g', 'LineWidth', 1);
+radial_plot = plot(time_steps, posRIC2a(:,1), 'rx', 'MarkerSize', 5);
+crosstrack_plot= plot(time_steps, posRIC2a(:,2), 'bx', 'MarkerSize', 5);
+intrack_plot= plot(time_steps, posRIC2a(:,3), 'gx', 'MarkerSize', 5);
 
-radial_plot_STK = plot(true_ephem_time_steps_2, lumelite2_true_ephem.('Radial (km)').*1000, 'rx', 'MarkerSize', 5);
-crosstrack_plot_STK = plot(true_ephem_time_steps_2, lumelite2_true_ephem.('Cross-Track (km)').*1000, 'bx', 'MarkerSize', 5);
-intrack_plot_STK = plot(true_ephem_time_steps_2, lumelite2_true_ephem.('In-Track (km)').* 1000, 'gx', 'MarkerSize', 5);
+radial_plot_STK = plot(true_ephem_time_steps_2, lumelite2_true_ephem.('Radial (km)').*1000, 'r',  'LineWidth', 1);
+crosstrack_plot_STK = plot(true_ephem_time_steps_2, lumelite2_true_ephem.('Cross-Track (km)').*1000, 'b', 'LineWidth', 1);
+intrack_plot_STK = plot(true_ephem_time_steps_2, lumelite2_true_ephem.('In-Track (km)').* 1000, 'g',  'LineWidth', 1);
 
 
 xline(43200)
@@ -448,13 +450,13 @@ box on
 grid minor
 hold on
 
-radial_plot = plot(time_steps, posRIC3a(:,1), 'r', 'LineWidth', 1);
-crosstrack_plot = plot(time_steps, posRIC3a(:,2), 'b', 'LineWidth', 1);
-intrack_plot = plot(time_steps, posRIC3a(:,3), 'g', 'LineWidth', 1);
+radial_plot = plot(time_steps, posRIC3a(:,1), 'rx', 'MarkerSize', 5);
+crosstrack_plot = plot(time_steps, posRIC3a(:,2), 'bx', 'MarkerSize', 5);
+intrack_plot = plot(time_steps, posRIC3a(:,3), 'gx', 'MarkerSize', 5);
 
-radial_plot_STK = plot(true_ephem_time_steps_3, lumelite3_true_ephem.('Radial (km)').*1000, 'rx', 'MarkerSize', 5);
-crosstrack_plot_STK = plot(true_ephem_time_steps_3, lumelite3_true_ephem.('Cross-Track (km)').*1000, 'bx', 'MarkerSize', 5);
-intrack_plot_STK = plot(true_ephem_time_steps_3, lumelite3_true_ephem.('In-Track (km)').* 1000, 'gx', 'MarkerSize', 5);
+radial_plot_STK = plot(true_ephem_time_steps_3, lumelite3_true_ephem.('Radial (km)').*1000, 'r', 'LineWidth', 1);
+crosstrack_plot_STK = plot(true_ephem_time_steps_3, lumelite3_true_ephem.('Cross-Track (km)').*1000, 'b',  'LineWidth', 1);
+intrack_plot_STK = plot(true_ephem_time_steps_3, lumelite3_true_ephem.('In-Track (km)').* 1000, 'g',  'LineWidth', 1);
 
 
 xline(43200)
@@ -506,10 +508,10 @@ hold on
 x_plot = plot(time_steps, Th3_total(1,:), 'xr', 'LineWidth', 1);
 y_plot = plot(time_steps, Th3_total(2,:), 'xb', 'LineWidth', 1);
 z_plot = plot(time_steps, Th3_total(3,:), 'xg', 'LineWidth', 1);
-xline(43200)
-xline(1252865.075)
-%plot(43200, 0, 'kx', 'MarkerSize', 10) %First thruster fire
-%plot(1252865.075, 0, 'kx', 'MarkerSize', 10) %Second thruster fire. 
+xline(43200) %First thruster fire
+xline(1252865.075) %Second thruster fire. 
+%plot(43200, 0, 'kx', 'MarkerSize', 10) 
+%plot(1252865.075, 0, 'kx', 'MarkerSize', 10) 
 set(gca,'FontSize',15)
 xlabel('Time after ignition (s)','interpreter', 'latex', 'fontsize', 20, 'Rotation', 0)
 ylabel('Thrust','interpreter', 'latex', 'fontsize', 20, 'Rotation', 90)
@@ -532,3 +534,14 @@ L.FontSize=15;
 % Plot the central body.
 % plot_body(1);
 % Plot the trajectory about the central body.
+
+
+function [instant_thrust, fire_indices] = instantaneous_thrust_when_firing(Th_total)
+%%% Function to output the thrust when it is firing. Outputs the time of
+%%% firing as well as an array. 
+%%% Use this function to check that thrust at all firings times equals
+%%% thrust specified, as the thrust is of constant thrust. 
+fire_indices = find(any(Th_total, 1));
+instant_thrust = sqrt(sum(Th_total(:,fire_indices).^2));
+
+end
