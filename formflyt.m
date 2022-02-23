@@ -18,8 +18,8 @@ close all
 
 % Specify the number of satellites.
 numSats = 3;
-%days = 20;
-days = 6;
+days = 20;
+%days = 6;
 % Specify the duration and the time step of the dynamics simulation (s).
 tt = days * 86400;
 dt = 1.0;
