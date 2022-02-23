@@ -1,3 +1,3 @@
-Maneuver Number,Segment,Start Time (UTCG),Stop Time (UTCG),Duration (sec),Delta V (m/sec),Fuel Used (kg),Thruster/Engine,Thrust x ,Thrust y ,Thrust z
-1,Get_into_initial_intrack_displacement.Burn1,00:00.0,01:05.1,65.075,2.646366,0.023,Lumelite_Engine,-0.127335,-0.358913,-0.919627
-2,Second_burn_to_return_to_original_plane.Burn2,01:05.1,01:46.5,41.401,1.685313,0.015,Lumelite_Engine,0.0991679,0.340097,0.388269
+Maneuver Number,Segment,Start Time (UTCG),Stop Time (UTCG),Duration (sec),Delta V (m/sec),Fuel Used (kg),Thruster/Engine,Thrust x,Thrust y ,Thrust z,,,,,,,Normalised Thrust x,Normalised Thrust y,Normalised Thrust z
+1,Get_into_initial_intrack_displacement.Burn1,00:00.0,01:05.1,65.075,2.646366,0.023,Lumelite_Engine,-0.127335,-0.358913,-0.919627,,,,0.016214202,0.128818542,0.845713819,-0.127928264,-0.360585204,-0.923911614
+2,Second_burn_to_return_to_original_plane.Burn2,01:05.1,01:46.5,41.401,1.685313,0.015,Lumelite_Engine,0.0991679,0.340097,0.388269,,,,0.009834272,0.115665969,0.150752816,0.188676395,0.647067003,0.738718831

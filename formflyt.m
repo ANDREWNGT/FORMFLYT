@@ -18,7 +18,8 @@ close all
 
 % Specify the number of satellites.
 numSats = 3;
-days = 20;
+%days = 20;
+days = 6;
 % Specify the duration and the time step of the dynamics simulation (s).
 tt = days * 86400;
 dt = 1.0;
@@ -65,8 +66,11 @@ f_initial = 1;
 
 %% Read data from STK Astrogator
 folder_path=".\data_STK_astrogator\Processed_data";
-lumelite2_data=readtable(folder_path+"\Lumelite2_final_summary.xlsx", "VariableNamingRule","preserve");
-lumelite3_data=readtable(folder_path+"\Lumelite3_final_summary.xlsx", "VariableNamingRule","preserve");
+lumelite2_data=readtable(folder_path+"\original\Lumelite2_final_summary.xlsx", "VariableNamingRule","preserve");
+lumelite3_data=readtable(folder_path+"\original\Lumelite3_final_summary.xlsx", "VariableNamingRule","preserve");
+%lumelite2_data=readtable(folder_path+"\after normalisation\Lumelite2_final_summary.xlsx", "VariableNamingRule","preserve");
+%lumelite3_data=readtable(folder_path+"\after normalisation\Lumelite3_final_summary.xlsx", "VariableNamingRule","preserve");
+
 
 lumelite2_true_ephem = readtable(folder_path+"\Lumelite2_ground_truth.csv", "VariableNamingRule","preserve");
 lumelite3_true_ephem = readtable(folder_path+"\Lumelite3_ground_truth.csv", "VariableNamingRule","preserve");
@@ -404,7 +408,7 @@ for N = 1 : nSamples
     vel3a(N+1,:) = v3f;
     
 end
-
+%% Check that instantaneous thrust is equal to the thrust value, because it fires at a constant Isp. 
 [instant_thrust_2, fire_indices_2] = instantaneous_thrust_when_firing(Th2_total);
 [instant_thrust_3, fire_indices_3] = instantaneous_thrust_when_firing(Th3_total);
 fprintf("sat 2 intrack: %f km\n", posRIC2a(1,3)/1000)
