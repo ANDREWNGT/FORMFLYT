@@ -31,7 +31,7 @@ duration_cool = 28500.0; % About 5 orbits of cool down
 duration_fire = 240.0;
 % Specify the thruster's average force (N)
 thrust = 0.760;
-g0=9.80665;
+g0= 9.80665;
 Isp = 220; %s, from nanoavionics EPSS engine specs
 fuel_consumption = thrust / (Isp * g0); %kg/s
 % Initialise the pointing error DCM. Note that in the dynamics loop, this
