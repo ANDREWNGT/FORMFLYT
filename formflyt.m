@@ -34,6 +34,7 @@ duration_fire = 240.0;
 thrust = 0.760;
 g0= 9.80665;
 Isp = 220; %s, from nanoavionics EPSS engine specs
+start_fuel_mass = 0.8; %kg
 fuel_consumption = thrust / (Isp * g0); %kg/s
 % Initialise the pointing error DCM. Note that in the dynamics loop, this
 % pointing error DCM should be re-initialised in each loop as a random
@@ -66,11 +67,13 @@ f_initial = 1;
 
 %% Read data from STK Astrogator
 folder_path=".\data_STK_astrogator\Processed_data";
+inertial_at_ignition_path = ".\data_STK_astrogator\Inertial_at_ignition";
 lumelite2_data=readtable(folder_path+"\original\Lumelite2_final_summary.xlsx", "VariableNamingRule","preserve");
 lumelite3_data=readtable(folder_path+"\original\Lumelite3_final_summary.xlsx", "VariableNamingRule","preserve");
-%lumelite2_data=readtable(folder_path+"\after normalisation\Lumelite2_final_summary.xlsx", "VariableNamingRule","preserve");
-%lumelite3_data=readtable(folder_path+"\after normalisation\Lumelite3_final_summary.xlsx", "VariableNamingRule","preserve");
 
+
+lumelite2_true_ephem_inertial = readtable(inertial_at_ignition_path+"\Lumelite2_ground_truth.csv", "VariableNamingRule","preserve");
+lumelite3_true_ephem_inertial = readtable(inertial_at_ignition_path+"\Lumelite3_ground_truth.csv", "VariableNamingRule","preserve");
 
 lumelite2_true_ephem = readtable(folder_path+"\Lumelite2_ground_truth.csv", "VariableNamingRule","preserve");
 lumelite3_true_ephem = readtable(folder_path+"\Lumelite3_ground_truth.csv", "VariableNamingRule","preserve");
@@ -88,7 +91,7 @@ R1  = 70.00;       % Right Ascension (degrees)
 M1  = 46.654;      % Mean Anomaly (degrees)
 Cd1 = 2.2;         % Drag coefficient
 Ar1 = 0.374;       % Drag area (m^2)
-Ms1 = 17.90;       % Spacecraft mass (kg)
+Ms1 = 17.90 + start_fuel_mass;       % Spacecraft mass (kg)
 Th1 = 0.00;        % Spacecraft thrust force (N)
 
 if f_initial == 0
@@ -101,7 +104,8 @@ if f_initial == 0
     M2  = 43.925 ;     % Mean Anomaly (degrees)
     Cd2 = 2.2;         % Drag coefficient
     Ar2 = 0.374;       % Drag area (m^2)
-    Ms2 = 17.90;       % Spacecraft mass (kg)
+    Ms2 = 17.90 + start_fuel_mass;       % Spacecraft mass (kg)
+    
     Th2 = [0 0 0];     % Spacecraft thrust force vector(N)
     
     % Input the initial osculating orbit elements for Satellite 3.
@@ -113,7 +117,7 @@ if f_initial == 0
     M3  = 44.996;      % Mean Anomaly (degrees)
     Cd3 = 2.2;         % Drag coefficient
     Ar3 = 0.374;       % Drag area (m^2)
-    Ms3 = 17.90;       % Spacecraft mass (kg)
+    Ms3 = 17.90 + start_fuel_mass;       % Spacecraft mass (kg)
     Th3 = [0 0 0];     % Spacecraft thrust force vector(N)
     
 else
@@ -125,7 +129,7 @@ else
     M2  = 29.876 ;     % Mean Anomaly (degrees)
     Cd2 = 2.2;         % Drag coefficient
     Ar2 = 0.374;       % Drag area (m^2)
-    Ms2 = 17.90;       % Spacecraft mass (kg)
+    Ms2 = 17.90 + start_fuel_mass;       % Spacecraft mass (kg)
     Th2 = [0 0 0];        % Spacecraft thrust force (N)
     
     % Input the initial osculating orbit elements for Satellite 3.
@@ -137,7 +141,7 @@ else
     M3  = 11.39;      % Mean Anomaly (degrees)
     Cd3 = 2.2;         % Drag coefficient
     Ar3 = 0.374;       % Drag area (m^2)
-    Ms3 = 17.90;       % Spacecraft mass (kg)
+    Ms3 = 17.90 + start_fuel_mass;       % Spacecraft mass (kg)
     Th3 = [0 0 0];        % Spacecraft thrust force (N)
     
 end
@@ -219,6 +223,8 @@ lum2_num_segments= size(lum2_segment, 1);
 lum2_ismanuever = ~isnan(lumelite2_data{:, "Delta V (m/sec)"});
 lum2_next_segment_start = 0;
 Th2_total = zeros(3 , size(time_steps,2));
+deltaV2_total = zeros(1 , size(time_steps,2));
+fuel_consumed2 = zeros(1, size(time_steps,2));
 
 lum3_segment = lumelite3_data{:, "Segment Name"};
 lum3_schedule = lumelite3_data{:,"Time from mission start (s)"};
@@ -226,7 +232,9 @@ lum3_segment_durations = lumelite3_data{:,"segment_duration"};
 lum3_num_segments = size(lum3_segment, 1);
 lum3_ismanuever = ~isnan(lumelite3_data{:, "Delta V (m/sec)"});
 lum3_next_segment_start = 0;
-Th3_total=zeros(3,size(time_steps,2));
+Th3_total = zeros(3,size(time_steps,2));
+deltaV3_total = zeros(1 , size(time_steps,2));
+fuel_consumed3 = zeros(1, size(time_steps,2));
 
 %% BEGIN THE DYNAMICS LOOP
 lum2_schedule_index=1;
@@ -407,7 +415,27 @@ for N = 1 : nSamples
     pos3a(N+1,:) = p3f;
     vel3a(N+1,:) = v3f;
     
+    
+    %Update masses of spacecraft
+    if lum2_ismanuever(lum2_schedule_index)==1
+        Ms2_old = Ms2;
+        Ms2 = Ms2 - fuel_consumption * dt; 
+        [deltaV2_total(N), fuel_consumed2(N)] = deltaV_calc(Ms2_old, Ms2, Isp, g0, dt, fuel_consumption);
+    end
+    
+    if lum3_ismanuever(lum3_schedule_index)==1
+        Ms3_old = Ms3; 
+        Ms3 = Ms3 - fuel_consumption * dt;
+        [deltaV3_total(N), fuel_consumed3(N)]= deltaV_calc(Ms3_old, Ms3, Isp, g0, dt, fuel_consumption);
+    end
 end
+
+%% Check delta V values
+[final_deltaV2, start_time2] = maneuver_processing(deltaV2_total, dt);
+[final_deltaV3, start_time3] = maneuver_processing(deltaV3_total, dt);
+%% Check fuel consumption values
+[final_fuel2, ~] = maneuver_processing(fuel_consumed2, dt);
+[final_fuel3, ~] = maneuver_processing(fuel_consumed3, dt);
 %% Check that instantaneous thrust is equal to the thrust value, because it fires at a constant Isp. 
 [instant_thrust_2, fire_indices_2] = instantaneous_thrust_when_firing(Th2_total);
 [instant_thrust_3, fire_indices_3] = instantaneous_thrust_when_firing(Th3_total);
@@ -418,20 +446,28 @@ fprintf("sat 3 intrack: %f km", posRIC3a(1,3)/1000)
 true_ephem_time_steps_2 = lumelite2_true_ephem.('Time from mission start (s)');
 true_ephem_time_steps_3 = lumelite3_true_ephem.('Time from mission start (s)');
 
+true_ephem_time_steps_2_inertial = lumelite2_true_ephem_inertial.('Time from mission start (s)');
+true_ephem_time_steps_3_inertial = lumelite3_true_ephem_inertial.('Time from mission start (s)');
 %% PLOT THE RADIAL, INTRACK, CROSS-TRACK OF SATELLITE 2 WRT 1
+every_nth_point = 3000;
 fh=figure(1);
 fh.WindowState = 'maximized';
 
 box on
 grid minor
 hold on
-radial_plot = plot(time_steps, posRIC2a(:,1), 'rx', 'MarkerSize', 5);
-crosstrack_plot= plot(time_steps, posRIC2a(:,2), 'bx', 'MarkerSize', 5);
-intrack_plot= plot(time_steps, posRIC2a(:,3), 'gx', 'MarkerSize', 5);
+radial_plot = plot(time_steps(1,1:every_nth_point:end), posRIC2a(1:every_nth_point:end,1), 'rx', 'MarkerSize', 5);
+crosstrack_plot= plot(time_steps(1,1:every_nth_point:end), posRIC2a(1:every_nth_point:end,2), 'bx', 'MarkerSize', 5);
+intrack_plot= plot(time_steps(1,1:every_nth_point:end), posRIC2a(1:every_nth_point:end,3), 'gx', 'MarkerSize', 5);
 
 radial_plot_STK = plot(true_ephem_time_steps_2, lumelite2_true_ephem.('Radial (km)').*1000, 'r',  'LineWidth', 1);
 crosstrack_plot_STK = plot(true_ephem_time_steps_2, lumelite2_true_ephem.('Cross-Track (km)').*1000, 'b', 'LineWidth', 1);
 intrack_plot_STK = plot(true_ephem_time_steps_2, lumelite2_true_ephem.('In-Track (km)').* 1000, 'g',  'LineWidth', 1);
+
+radial_plot_STK_inertial = plot(true_ephem_time_steps_2_inertial(1:every_nth_point:end), lumelite2_true_ephem_inertial.('Radial (km)')(1:every_nth_point:end, 1).*1000, 'ro',  'LineWidth', 1);
+crosstrack_plot_STK_inertial = plot(true_ephem_time_steps_2_inertial(1:every_nth_point:end), lumelite2_true_ephem_inertial.('Cross-Track (km)')(1:every_nth_point:end, 1).*1000, 'bo', 'LineWidth', 1);
+intrack_plot_STK_inertial = plot(true_ephem_time_steps_2_inertial(1:every_nth_point:end), lumelite2_true_ephem_inertial.('In-Track (km)')(1:every_nth_point:end, 1).* 1000, 'go',  'LineWidth', 1);
+
 
 
 xline(43200)
@@ -441,9 +477,9 @@ set(gca,'FontSize',15)
 xlabel('Time after ignition (s)','interpreter', 'latex', 'fontsize', 20, 'Rotation', 0)
 ylabel('Distance','interpreter', 'latex', 'fontsize', 20, 'Rotation', 90)
 title('Displacements of satellite 2 w.r.t 1', 'interpreter', 'latex', 'fontsize', 20, 'Rotation', 0)
-L=legend([radial_plot crosstrack_plot intrack_plot radial_plot_STK ...
-    crosstrack_plot_STK intrack_plot_STK], 'Radial', 'Cross-track', 'Intrack', ...
-          'Radial STK', 'Cross-track STK', 'Intrack STK');
+%L=legend([radial_plot crosstrack_plot intrack_plot radial_plot_STK ...
+%    crosstrack_plot_STK intrack_plot_STK radial_plot_STK_inertial crosstrack_plot_STK_inertial intrack_plot_STK_inertial], 'Radial', 'Cross-track', 'Intrack', ...
+%          'Radial STK', 'Cross-track STK', 'Intrack STK', 'Radial STK inertial', 'Cross-track STK inertial', 'Intrack STK inertial');
 L.FontSize=15;
 
 %% PLOT THE RADIAL, INTRACK, CROSS-TRACK OF SATELLITE 3 WRT 1
@@ -462,6 +498,11 @@ radial_plot_STK = plot(true_ephem_time_steps_3, lumelite3_true_ephem.('Radial (k
 crosstrack_plot_STK = plot(true_ephem_time_steps_3, lumelite3_true_ephem.('Cross-Track (km)').*1000, 'b',  'LineWidth', 1);
 intrack_plot_STK = plot(true_ephem_time_steps_3, lumelite3_true_ephem.('In-Track (km)').* 1000, 'g',  'LineWidth', 1);
 
+radial_plot_STK_inertial = plot(true_ephem_time_steps_3_inertial, lumelite3_true_ephem_inertial.('Radial (km)').*1000, 'ro',  'LineWidth', 1);
+crosstrack_plot_STK_inertial = plot(true_ephem_time_steps_3_inertial, lumelite3_true_ephem_inertial.('Cross-Track (km)').*1000, 'bo', 'LineWidth', 1);
+intrack_plot_STK_inertial = plot(true_ephem_time_steps_3_inertial, lumelite3_true_ephem_inertial.('In-Track (km)').* 1000, 'go',  'LineWidth', 1);
+
+
 
 xline(43200)
 xline(1252865.075)
@@ -471,10 +512,13 @@ set(gca,'FontSize',15)
 xlabel('Time after ignition (s)','interpreter', 'latex', 'fontsize', 20, 'Rotation', 0)
 ylabel('Distance','interpreter', 'latex', 'fontsize', 20, 'Rotation', 90)
 title('Displacements of satellite 3 w.r.t 1', 'interpreter', 'latex', 'fontsize', 20, 'Rotation', 0)
+%L=legend([radial_plot crosstrack_plot intrack_plot radial_plot_STK ...
+%    crosstrack_plot_STK intrack_plot_STK], 'Radial', 'Cross-track', 'Intrack', ...
+%          'Radial STK', 'Cross-track STK', 'Intrack STK');
 L=legend([radial_plot crosstrack_plot intrack_plot radial_plot_STK ...
-    crosstrack_plot_STK intrack_plot_STK], 'Radial', 'Cross-track', 'Intrack', ...
-          'Radial STK', 'Cross-track STK', 'Intrack STK');
-      
+    crosstrack_plot_STK intrack_plot_STK radial_plot_STK_inertial crosstrack_plot_STK_inertial intrack_plot_STK_inertial], 'Radial', 'Cross-track', 'Intrack', ...
+          'Radial STK', 'Cross-track STK', 'Intrack STK', 'Radial STK inertial', 'Cross-track STK inertial', 'Intrack STK inertial');
+
 L.FontSize=15;
 
 
@@ -549,3 +593,10 @@ fire_indices = find(any(Th_total, 1));
 instant_thrust = sqrt(sum(Th_total(:,fire_indices).^2));
 
 end
+
+function [deltaV, fuel_consumed] = deltaV_calc(prior_mass, final_mass, Isp, g, dt, fuel_consumption)
+%%%Function to output delta V
+deltaV = Isp * g * log(prior_mass/(final_mass));
+fuel_consumed = fuel_consumption * dt;
+end
+
