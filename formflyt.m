@@ -464,10 +464,10 @@ radial_plot_STK = plot(true_ephem_time_steps_2, lumelite2_true_ephem.('Radial (k
 crosstrack_plot_STK = plot(true_ephem_time_steps_2, lumelite2_true_ephem.('Cross-Track (km)').*1000, 'b', 'LineWidth', 1);
 intrack_plot_STK = plot(true_ephem_time_steps_2, lumelite2_true_ephem.('In-Track (km)').* 1000, 'g',  'LineWidth', 1);
 
-radial_plot_STK_inertial = plot(true_ephem_time_steps_2_inertial(1:every_nth_point:end), lumelite2_true_ephem_inertial.('Radial (km)')(1:every_nth_point:end, 1).*1000, 'ro',  'LineWidth', 1);
-crosstrack_plot_STK_inertial = plot(true_ephem_time_steps_2_inertial(1:every_nth_point:end), lumelite2_true_ephem_inertial.('Cross-Track (km)')(1:every_nth_point:end, 1).*1000, 'bo', 'LineWidth', 1);
-intrack_plot_STK_inertial = plot(true_ephem_time_steps_2_inertial(1:every_nth_point:end), lumelite2_true_ephem_inertial.('In-Track (km)')(1:every_nth_point:end, 1).* 1000, 'go',  'LineWidth', 1);
-
+% radial_plot_STK_inertial = plot(true_ephem_time_steps_2_inertial(1:every_nth_point:end), lumelite2_true_ephem_inertial.('Radial (km)')(1:every_nth_point:end, 1).*1000, 'ro',  'LineWidth', 1);
+% crosstrack_plot_STK_inertial = plot(true_ephem_time_steps_2_inertial(1:every_nth_point:end), lumelite2_true_ephem_inertial.('Cross-Track (km)')(1:every_nth_point:end, 1).*1000, 'bo', 'LineWidth', 1);
+% intrack_plot_STK_inertial = plot(true_ephem_time_steps_2_inertial(1:every_nth_point:end), lumelite2_true_ephem_inertial.('In-Track (km)')(1:every_nth_point:end, 1).* 1000, 'go',  'LineWidth', 1);
+% 
 
 
 xline(43200)
@@ -477,9 +477,9 @@ set(gca,'FontSize',15)
 xlabel('Time after ignition (s)','interpreter', 'latex', 'fontsize', 20, 'Rotation', 0)
 ylabel('Distance','interpreter', 'latex', 'fontsize', 20, 'Rotation', 90)
 title('Displacements of satellite 2 w.r.t 1', 'interpreter', 'latex', 'fontsize', 20, 'Rotation', 0)
-%L=legend([radial_plot crosstrack_plot intrack_plot radial_plot_STK ...
-%    crosstrack_plot_STK intrack_plot_STK radial_plot_STK_inertial crosstrack_plot_STK_inertial intrack_plot_STK_inertial], 'Radial', 'Cross-track', 'Intrack', ...
-%          'Radial STK', 'Cross-track STK', 'Intrack STK', 'Radial STK inertial', 'Cross-track STK inertial', 'Intrack STK inertial');
+L=legend([radial_plot crosstrack_plot intrack_plot radial_plot_STK ...
+   crosstrack_plot_STK intrack_plot_STK], 'Radial', 'Cross-track', 'Intrack', ...
+         'Radial STK', 'Cross-track STK', 'Intrack STK');
 L.FontSize=15;
 
 %% PLOT THE RADIAL, INTRACK, CROSS-TRACK OF SATELLITE 3 WRT 1
@@ -498,10 +498,10 @@ radial_plot_STK = plot(true_ephem_time_steps_3, lumelite3_true_ephem.('Radial (k
 crosstrack_plot_STK = plot(true_ephem_time_steps_3, lumelite3_true_ephem.('Cross-Track (km)').*1000, 'b',  'LineWidth', 1);
 intrack_plot_STK = plot(true_ephem_time_steps_3, lumelite3_true_ephem.('In-Track (km)').* 1000, 'g',  'LineWidth', 1);
 
-radial_plot_STK_inertial = plot(true_ephem_time_steps_3_inertial, lumelite3_true_ephem_inertial.('Radial (km)').*1000, 'ro',  'LineWidth', 1);
-crosstrack_plot_STK_inertial = plot(true_ephem_time_steps_3_inertial, lumelite3_true_ephem_inertial.('Cross-Track (km)').*1000, 'bo', 'LineWidth', 1);
-intrack_plot_STK_inertial = plot(true_ephem_time_steps_3_inertial, lumelite3_true_ephem_inertial.('In-Track (km)').* 1000, 'go',  'LineWidth', 1);
-
+% radial_plot_STK_inertial = plot(true_ephem_time_steps_3_inertial, lumelite3_true_ephem_inertial.('Radial (km)').*1000, 'ro',  'LineWidth', 1);
+% crosstrack_plot_STK_inertial = plot(true_ephem_time_steps_3_inertial, lumelite3_true_ephem_inertial.('Cross-Track (km)').*1000, 'bo', 'LineWidth', 1);
+% intrack_plot_STK_inertial = plot(true_ephem_time_steps_3_inertial, lumelite3_true_ephem_inertial.('In-Track (km)').* 1000, 'go',  'LineWidth', 1);
+% 
 
 
 xline(43200)
@@ -516,8 +516,8 @@ title('Displacements of satellite 3 w.r.t 1', 'interpreter', 'latex', 'fontsize'
 %    crosstrack_plot_STK intrack_plot_STK], 'Radial', 'Cross-track', 'Intrack', ...
 %          'Radial STK', 'Cross-track STK', 'Intrack STK');
 L=legend([radial_plot crosstrack_plot intrack_plot radial_plot_STK ...
-    crosstrack_plot_STK intrack_plot_STK radial_plot_STK_inertial crosstrack_plot_STK_inertial intrack_plot_STK_inertial], 'Radial', 'Cross-track', 'Intrack', ...
-          'Radial STK', 'Cross-track STK', 'Intrack STK', 'Radial STK inertial', 'Cross-track STK inertial', 'Intrack STK inertial');
+    crosstrack_plot_STK intrack_plot_STK], 'Radial', 'Cross-track', 'Intrack', ...
+          'Radial STK', 'Cross-track STK', 'Intrack STK');
 
 L.FontSize=15;
 
