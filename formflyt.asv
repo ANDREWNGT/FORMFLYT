@@ -65,7 +65,11 @@ f_Dg = 0; % Enable / disable drag
 % already in final formation, 1 = in initial formation)
 f_initial = 1;
 
+
+thrust_vector_frame ="ECI"; %Either "ECI" or "RIC"
+
 %% Read data from STK Astrogator
+ephem_freq = 30; %seconds
 folder_path=".\data_STK_astrogator\Processed_data";
 inertial_at_ignition_path = ".\data_STK_astrogator\Inertial_at_ignition";
 lumelite2_data=readtable(folder_path+"\original\Lumelite2_final_summary.xlsx", "VariableNamingRule","preserve");
@@ -299,7 +303,7 @@ for N = 1 : nSamples
     
     % Perform radial, in-track and cross-track corrections for satellite 2,
     % Th2. Control solution outputs the 1X3 Thrust vector 'Th2'.
-    %% Manuever plan: 
+    %% Manuever plan for satellite 2: 
     % Segment 1: Thruster burn in intrack direction to enter lower orbit.
     % Allocate 120s of burn.
     % Segment 2: Drift to catch reduce intrack separation to 100km.
@@ -317,9 +321,9 @@ for N = 1 : nSamples
     end
     if lum2_ismanuever(lum2_schedule_index)==1
         % Fire thruster as this is a manuever.
-        Th2 = [ lumelite2_data{lum2_schedule_index, "RIC X Thrust Component"} * thrust,...
-                lumelite2_data{lum2_schedule_index, "RIC Y Thrust Component"} * thrust,...
-                lumelite2_data{lum2_schedule_index, "RIC Z Thrust Component"} * thrust
+        Th2 = [ lumelite2_data{lum2_schedule_index, sprintf("%s X Thrust Component", thrust_vector_frame)} * thrust,...
+                lumelite2_data{lum2_schedule_index, sprintf("%s Y Thrust Component", thrust_vector_frame)} * thrust,...
+                lumelite2_data{lum2_schedule_index, sprintf("%s Z Thrust Component", thrust_vector_frame)} * thrust
             ];
     end
     
@@ -364,9 +368,9 @@ for N = 1 : nSamples
     end
     if lum3_ismanuever(lum3_schedule_index)==1
         % Fire thruster as this is a manuever.
-        Th3 = [ lumelite3_data{lum3_schedule_index, "RIC X Thrust Component"} * thrust,...
-                lumelite3_data{lum3_schedule_index, "RIC Y Thrust Component"} * thrust,...
-                lumelite3_data{lum3_schedule_index, "RIC Z Thrust Component"} * thrust
+        Th3 = [ lumelite3_data{lum3_schedule_index, sprintf("%s X Thrust Component", thrust_vector_frame)} * thrust,...
+                lumelite3_data{lum3_schedule_index, sprintf("%s Y Thrust Component", thrust_vector_frame)} * thrust,...
+                lumelite3_data{lum3_schedule_index, sprintf("%s Z Thrust Component", thrust_vector_frame)} * thrust
             ];
     end
     
@@ -399,10 +403,7 @@ for N = 1 : nSamples
     [p1f, v1f] = prop_RK4_38( dt, p1, v1, Cd1, Ar1, Ms1, f_J2, f_Dg, Th1 );
     pos1a(N+1,:) = p1f;
     vel1a(N+1,:) = v1f;
-    
-%     if N==153
-%         disp("HALT!")
-%     end
+
     % Runge-Kutta 4th Order (RK4) Propagator (3/8 Rule Variant).
     % This code below is meant to only propagate LEO 2.
     [p2f, v2f] = prop_RK4_38( dt, p2, v2, Cd2, Ar2, Ms2, f_J2, f_Dg, Th2 );
@@ -420,19 +421,22 @@ for N = 1 : nSamples
     if lum2_ismanuever(lum2_schedule_index)==1
         Ms2_old = Ms2;
         Ms2 = Ms2 - fuel_consumption * dt; 
-        [deltaV2_total(N), fuel_consumed2(N)] = deltaV_calc(Ms2_old, Ms2, Isp, g0, fuel_consumption);
+        [deltaV2_total(N), fuel_consumed2(N)] = deltaV_calc(Ms2_old, Ms2, Isp, g0, dt, fuel_consumption);
     end
     
     if lum3_ismanuever(lum3_schedule_index)==1
         Ms3_old = Ms3; 
         Ms3 = Ms3 - fuel_consumption * dt;
-        [deltaV3_total(N), fuel_consumed3(N)]= deltaV_calc(Ms3_old, Ms3, Isp, g0, fuel_consumption);
+        [deltaV3_total(N), fuel_consumed3(N)]= deltaV_calc(Ms3_old, Ms3, Isp, g0, dt, fuel_consumption);
     end
 end
 
 %% Check delta V values
-[final_deltaV2, start_time2] =deltaV_processing(deltaV2_total, dt);
-[final_deltaV3, start_time3] =deltaV_processing(deltaV3_total, dt);
+[final_deltaV2, start_time2] = maneuver_processing(deltaV2_total, dt);
+[final_deltaV3, start_time3] = maneuver_processing(deltaV3_total, dt);
+%% Check fuel consumption values
+[final_fuel2, ~] = maneuver_processing(fuel_consumed2, dt);
+[final_fuel3, ~] = maneuver_processing(fuel_consumed3, dt);
 %% Check that instantaneous thrust is equal to the thrust value, because it fires at a constant Isp. 
 [instant_thrust_2, fire_indices_2] = instantaneous_thrust_when_firing(Th2_total);
 [instant_thrust_3, fire_indices_3] = instantaneous_thrust_when_firing(Th3_total);
@@ -445,124 +449,18 @@ true_ephem_time_steps_3 = lumelite3_true_ephem.('Time from mission start (s)');
 
 true_ephem_time_steps_2_inertial = lumelite2_true_ephem_inertial.('Time from mission start (s)');
 true_ephem_time_steps_3_inertial = lumelite3_true_ephem_inertial.('Time from mission start (s)');
+
+every_nth_point = ephem_freq/dt;
+
 %% PLOT THE RADIAL, INTRACK, CROSS-TRACK OF SATELLITE 2 WRT 1
-every_nth_point = 3000;
-fh=figure(1);
-fh.WindowState = 'maximized';
-
-box on
-grid minor
-hold on
-radial_plot = plot(time_steps(1,1:every_nth_point:end), posRIC2a(1:every_nth_point:end,1), 'rx', 'MarkerSize', 5);
-crosstrack_plot= plot(time_steps(1,1:every_nth_point:end), posRIC2a(1:every_nth_point:end,2), 'bx', 'MarkerSize', 5);
-intrack_plot= plot(time_steps(1,1:every_nth_point:end), posRIC2a(1:every_nth_point:end,3), 'gx', 'MarkerSize', 5);
-
-radial_plot_STK = plot(true_ephem_time_steps_2, lumelite2_true_ephem.('Radial (km)').*1000, 'r',  'LineWidth', 1);
-crosstrack_plot_STK = plot(true_ephem_time_steps_2, lumelite2_true_ephem.('Cross-Track (km)').*1000, 'b', 'LineWidth', 1);
-intrack_plot_STK = plot(true_ephem_time_steps_2, lumelite2_true_ephem.('In-Track (km)').* 1000, 'g',  'LineWidth', 1);
-
-radial_plot_STK_inertial = plot(true_ephem_time_steps_2_inertial(1:every_nth_point:end), lumelite2_true_ephem_inertial.('Radial (km)')(1:every_nth_point:end, 1).*1000, 'ro',  'LineWidth', 1);
-crosstrack_plot_STK_inertial = plot(true_ephem_time_steps_2_inertial(1:every_nth_point:end), lumelite2_true_ephem_inertial.('Cross-Track (km)')(1:every_nth_point:end, 1).*1000, 'bo', 'LineWidth', 1);
-intrack_plot_STK_inertial = plot(true_ephem_time_steps_2_inertial(1:every_nth_point:end), lumelite2_true_ephem_inertial.('In-Track (km)')(1:every_nth_point:end, 1).* 1000, 'go',  'LineWidth', 1);
-
-
-
-xline(43200)
-xline(1252842.554)
-
-set(gca,'FontSize',15)
-xlabel('Time after ignition (s)','interpreter', 'latex', 'fontsize', 20, 'Rotation', 0)
-ylabel('Distance','interpreter', 'latex', 'fontsize', 20, 'Rotation', 90)
-title('Displacements of satellite 2 w.r.t 1', 'interpreter', 'latex', 'fontsize', 20, 'Rotation', 0)
-%L=legend([radial_plot crosstrack_plot intrack_plot radial_plot_STK ...
-%    crosstrack_plot_STK intrack_plot_STK radial_plot_STK_inertial crosstrack_plot_STK_inertial intrack_plot_STK_inertial], 'Radial', 'Cross-track', 'Intrack', ...
-%          'Radial STK', 'Cross-track STK', 'Intrack STK', 'Radial STK inertial', 'Cross-track STK inertial', 'Intrack STK inertial');
-L.FontSize=15;
-
-%% PLOT THE RADIAL, INTRACK, CROSS-TRACK OF SATELLITE 3 WRT 1
-fh=figure(2);
-fh.WindowState = 'maximized';
-
-box on
-grid minor
-hold on
-
-radial_plot = plot(time_steps, posRIC3a(:,1), 'rx', 'MarkerSize', 5);
-crosstrack_plot = plot(time_steps, posRIC3a(:,2), 'bx', 'MarkerSize', 5);
-intrack_plot = plot(time_steps, posRIC3a(:,3), 'gx', 'MarkerSize', 5);
-
-radial_plot_STK = plot(true_ephem_time_steps_3, lumelite3_true_ephem.('Radial (km)').*1000, 'r', 'LineWidth', 1);
-crosstrack_plot_STK = plot(true_ephem_time_steps_3, lumelite3_true_ephem.('Cross-Track (km)').*1000, 'b',  'LineWidth', 1);
-intrack_plot_STK = plot(true_ephem_time_steps_3, lumelite3_true_ephem.('In-Track (km)').* 1000, 'g',  'LineWidth', 1);
-
-radial_plot_STK_inertial = plot(true_ephem_time_steps_3_inertial, lumelite3_true_ephem_inertial.('Radial (km)').*1000, 'ro',  'LineWidth', 1);
-crosstrack_plot_STK_inertial = plot(true_ephem_time_steps_3_inertial, lumelite3_true_ephem_inertial.('Cross-Track (km)').*1000, 'bo', 'LineWidth', 1);
-intrack_plot_STK_inertial = plot(true_ephem_time_steps_3_inertial, lumelite3_true_ephem_inertial.('In-Track (km)').* 1000, 'go',  'LineWidth', 1);
-
-
-
-xline(43200)
-xline(1252865.075)
-%plot(43200, 0, 'kx', 'MarkerSize', 10) %First thruster fire
-%plot(1252865.075, 0, 'kx', 'MarkerSize', 10) %Second thruster fire. 
-set(gca,'FontSize',15)
-xlabel('Time after ignition (s)','interpreter', 'latex', 'fontsize', 20, 'Rotation', 0)
-ylabel('Distance','interpreter', 'latex', 'fontsize', 20, 'Rotation', 90)
-title('Displacements of satellite 3 w.r.t 1', 'interpreter', 'latex', 'fontsize', 20, 'Rotation', 0)
-%L=legend([radial_plot crosstrack_plot intrack_plot radial_plot_STK ...
-%    crosstrack_plot_STK intrack_plot_STK], 'Radial', 'Cross-track', 'Intrack', ...
-%          'Radial STK', 'Cross-track STK', 'Intrack STK');
-L=legend([radial_plot crosstrack_plot intrack_plot radial_plot_STK ...
-    crosstrack_plot_STK intrack_plot_STK radial_plot_STK_inertial crosstrack_plot_STK_inertial intrack_plot_STK_inertial], 'Radial', 'Cross-track', 'Intrack', ...
-          'Radial STK', 'Cross-track STK', 'Intrack STK', 'Radial STK inertial', 'Cross-track STK inertial', 'Intrack STK inertial');
-
-L.FontSize=15;
-
-
-%% PLOT THE thrust vector over time of SATELLITE 2 
-fh=figure(3);
-fh.WindowState = 'maximized';
-
-box on
-grid minor
-hold on
-
-x_plot = plot(time_steps, Th2_total(1,:), 'xr', 'LineWidth', 1);
-y_plot = plot(time_steps, Th2_total(2,:), 'xb', 'LineWidth', 1);
-z_plot = plot(time_steps, Th2_total(3,:), 'xg', 'LineWidth', 1);
-xline(43200)
-xline(1252842.554)
-%plot(43200, 0, 'kx', 'MarkerSize', 10) %First thruster fire
-%plot(1252865.075, 0, 'kx', 'MarkerSize', 10) %Second thruster fire. 
-set(gca,'FontSize',15)
-xlabel('Time after ignition (s)','interpreter', 'latex', 'fontsize', 20, 'Rotation', 0)
-ylabel('Thrust','interpreter', 'latex', 'fontsize', 20, 'Rotation', 90)
-title('Thrust vector of satellite 2', 'interpreter', 'latex', 'fontsize', 20, 'Rotation', 0)
-L=legend([x_plot y_plot z_plot], 'x', 'y', 'z');
-L.FontSize=15;
-
-
-%% PLOT THE thrust vector over time of SATELLITE 3 
-fh=figure(4);
-fh.WindowState = 'maximized';
-
-box on
-grid minor
-hold on
-
-x_plot = plot(time_steps, Th3_total(1,:), 'xr', 'LineWidth', 1);
-y_plot = plot(time_steps, Th3_total(2,:), 'xb', 'LineWidth', 1);
-z_plot = plot(time_steps, Th3_total(3,:), 'xg', 'LineWidth', 1);
-xline(43200) %First thruster fire
-xline(1252865.075) %Second thruster fire. 
-%plot(43200, 0, 'kx', 'MarkerSize', 10) 
-%plot(1252865.075, 0, 'kx', 'MarkerSize', 10) 
-set(gca,'FontSize',15)
-xlabel('Time after ignition (s)','interpreter', 'latex', 'fontsize', 20, 'Rotation', 0)
-ylabel('Thrust','interpreter', 'latex', 'fontsize', 20, 'Rotation', 90)
-title('Thrust vector of satellite 3', 'interpreter', 'latex', 'fontsize', 20, 'Rotation', 0)
-L=legend([x_plot y_plot z_plot], 'x', 'y', 'z');
-L.FontSize=15;
+plot_relative_disp(1, posRIC2a, lumelite2_true_ephem, time_steps, true_ephem_time_steps_2, tt, ephem_freq, every_nth_point, 2)
+plot_relative_disp(2, posRIC3a, lumelite3_true_ephem, time_steps, true_ephem_time_steps_3, tt, ephem_freq, every_nth_point, 3)
+%% P
+plot_thrust_vector(3, Th2_total, time_steps, 2)
+plot_thrust_vector(4, Th3_total, time_steps, 3)
+%% PLOT absolute error between STK and matlab for satellite 2 and 3 w.r.t 1
+plot_absolute_error(5, posRIC2a, lumelite2_true_ephem, time_steps, tt, ephem_freq, every_nth_point, 2)
+plot_absolute_error(6, posRIC3a, lumelite3_true_ephem, time_steps, tt, ephem_freq, every_nth_point, 3)
 
 %% FOR DEBUGGING...
 % CAN PLOT THE ORBIT ABOUT CENTRAL BODY USING THE PLOTTER BELOW TOO
@@ -581,6 +479,94 @@ L.FontSize=15;
 % Plot the trajectory about the central body.
 
 
+function [] = plot_relative_disp(figure_number, posRICa, lumelite_true_ephem, time_steps, true_ephem_time_steps, tt, ephem_freq, every_nth_point, vehicle_number)
+fh=figure(figure_number);
+fh.WindowState = 'maximized';
+
+box on
+grid minor
+hold on
+radial_plot = plot(time_steps(1,1:every_nth_point:end), posRICa(1:every_nth_point:end,1), 'rx', 'MarkerSize', 20);
+crosstrack_plot= plot(time_steps(1,1:every_nth_point:end), posRICa(1:every_nth_point:end,2), 'bx', 'MarkerSize', 20);
+intrack_plot= plot(time_steps(1,1:every_nth_point:end), posRICa(1:every_nth_point:end,3), 'gx', 'MarkerSize', 20);
+
+radial_plot_STK = plot(true_ephem_time_steps(1:tt/ephem_freq), lumelite_true_ephem.('Radial (km)')(1:tt/ephem_freq).*1000, 'r',  'LineWidth', 1);
+crosstrack_plot_STK = plot(true_ephem_time_steps(1:tt/ephem_freq), lumelite_true_ephem.('Cross-Track (km)')(1:tt/ephem_freq).*1000, 'b', 'LineWidth', 1);
+intrack_plot_STK = plot(true_ephem_time_steps(1:tt/ephem_freq), lumelite_true_ephem.('In-Track (km)')(1:tt/ephem_freq).* 1000, 'g',  'LineWidth', 1);
+
+xline(43200)
+xline(1252842.554)
+
+set(gca,'FontSize',15)
+xlabel('Time after ignition (s)','interpreter', 'latex', 'fontsize', 20, 'Rotation', 0)
+ylabel('Distance','interpreter', 'latex', 'fontsize', 20, 'Rotation', 90)
+title(sprintf('Displacements of satellite %d w.r.t 1', vehicle_number), 'interpreter', 'latex', 'fontsize', 20, 'Rotation', 0)
+L=legend([radial_plot crosstrack_plot intrack_plot radial_plot_STK ...
+   crosstrack_plot_STK intrack_plot_STK], 'Radial', 'Cross-track', 'Intrack', ...
+         'Radial STK', 'Cross-track STK', 'Intrack STK');
+L.FontSize=15;
+exportgraphics(gcf, sprintf("Plot Comparisons\\rel_disp_lum%d.png", vehicle_number), 'Resolution', 300)
+end
+
+function [] = plot_thrust_vector(figure_number, Th_total, time_steps, vehicle_number)
+fh=figure(figure_number);
+fh.WindowState = 'maximized';
+
+box on
+grid minor
+hold on
+
+x_plot = plot(time_steps, Th_total(1,:), 'xr', 'LineWidth', 1);
+y_plot = plot(time_steps, Th_total(2,:), 'xb', 'LineWidth', 1);
+z_plot = plot(time_steps, Th_total(3,:), 'xg', 'LineWidth', 1);
+xline(43200) %First thruster fire
+xline(1252865.075) %Second thruster fire. 
+%plot(43200, 0, 'kx', 'MarkerSize', 10) 
+%plot(1252865.075, 0, 'kx', 'MarkerSize', 10) 
+set(gca,'FontSize',15)
+xlabel('Time after ignition (s)','interpreter', 'latex', 'fontsize', 20, 'Rotation', 0)
+ylabel('Thrust','interpreter', 'latex', 'fontsize', 20, 'Rotation', 90)
+title(sprintf('Thrust vector of satellite %d', vehicle_number), 'interpreter', 'latex', 'fontsize', 20, 'Rotation', 0)
+L=legend([x_plot y_plot z_plot], 'x', 'y', 'z');
+L.FontSize=15;
+exportgraphics(gcf, sprintf("Plot Comparisons\\th_vect_lum%d.png", vehicle_number), 'Resolution', 300)
+
+end
+
+
+function [] = plot_absolute_error(figure_number, posRICa, lumelite_true_ephem, time_steps, tt, ephem_freq, every_nth_point, vehicle_number)
+%%%Function to plot the absolute deviation between matlab and stk method
+fh=figure(figure_number);
+fh.WindowState = 'maximized';
+
+box on
+grid minor
+hold on
+
+diff_radial = abs(posRICa(1:every_nth_point:end,1)-lumelite_true_ephem.('Radial (km)')(1:tt/ephem_freq+1).*1000);
+diff_crosstrack = abs(posRICa(1:every_nth_point:end,2)-lumelite_true_ephem.('Cross-Track (km)')(1:tt/ephem_freq+1).*1000);
+diff_intrack = abs(posRICa(1:every_nth_point:end,3)-lumelite_true_ephem.('In-Track (km)')(1:tt/ephem_freq+1).*1000);
+
+
+x_plot = plot(time_steps(1,1:every_nth_point:end), diff_radial, 'xr', 'LineWidth', 1);
+y_plot = plot(time_steps(1,1:every_nth_point:end), diff_crosstrack, 'xb', 'LineWidth', 1);
+z_plot = plot(time_steps(1,1:every_nth_point:end), diff_intrack, 'xg', 'LineWidth', 1);
+
+
+xline(43200) %First thruster fire
+xline(1252865.075) %Second thruster fire. 
+set(gca,'FontSize',15)
+xlabel('Time after ignition (s)','interpreter', 'latex', 'fontsize', 20, 'Rotation', 0)
+ylabel('Absolute difference(m)','interpreter', 'latex', 'fontsize', 20, 'Rotation', 90)
+title(sprintf('Deviation in position, MATLAB vs STK, lumelite %d w.r.t 1', vehicle_number), 'interpreter', 'latex', 'fontsize', 20, 'Rotation', 0)
+L=legend([x_plot y_plot z_plot], 'radial', 'cross-track', 'in-track');
+L.FontSize=15;
+exportgraphics(gcf, sprintf("Plot Comparisons\\abs_error_lum%d.png", vehicle_number), 'Resolution', 300)
+end
+
+
+
+
 function [instant_thrust, fire_indices] = instantaneous_thrust_when_firing(Th_total)
 %%% Function to output the thrust when it is firing. Outputs the time of
 %%% firing as well as an array. 
@@ -588,8 +574,10 @@ function [instant_thrust, fire_indices] = instantaneous_thrust_when_firing(Th_to
 %%% thrust specified, as the thrust is of constant thrust. 
 fire_indices = find(any(Th_total, 1));
 instant_thrust = sqrt(sum(Th_total(:,fire_indices).^2));
-
 end
+
+
+
 
 function [deltaV, fuel_consumed] = deltaV_calc(prior_mass, final_mass, Isp, g, dt, fuel_consumption)
 %%%Function to output delta V
