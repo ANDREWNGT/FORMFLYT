@@ -481,6 +481,8 @@ plot_absolute_error(6, posRIC3a, lumelite3_true_ephem, time_steps, tt, ephem_fre
 
 %% Functions used. 
 
+%first RIC comparison
+
 function [] = plot_relative_disp(figure_number, posRICa, lumelite_true_ephem, time_steps, true_ephem_time_steps, tt, ephem_freq, every_nth_point, vehicle_number)
 fh=figure(figure_number);
 fh.WindowState = 'maximized';
@@ -510,6 +512,8 @@ L.FontSize=15;
 exportgraphics(gcf, sprintf("Plot Comparisons\\rel_disp_lum%d.png", vehicle_number), 'Resolution', 300)
 end
 
+% thrust vector plot
+
 function [] = plot_thrust_vector(figure_number, Th_total, time_steps, vehicle_number)
 fh=figure(figure_number);
 fh.WindowState = 'maximized';
@@ -535,6 +539,7 @@ exportgraphics(gcf, sprintf("Plot Comparisons\\th_vect_lum%d.png", vehicle_numbe
 
 end
 
+% absolute error comparison
 
 function [] = plot_absolute_error(figure_number, posRICa, lumelite_true_ephem, time_steps, tt, ephem_freq, every_nth_point, vehicle_number)
 %%%Function to plot the absolute deviation between matlab and stk method
@@ -567,7 +572,37 @@ exportgraphics(gcf, sprintf("Plot Comparisons\\abs_error_lum%d.png", vehicle_num
 end
 
 
+function [] = plot_absolute_error_eci(figure_number, posRICa, lumelite_true_ephem, time_steps, tt, ephem_freq, every_nth_point, vehicle_number)
+%%%Function to plot the absolute deviation between matlab and stk method
+fh=figure(figure_number);
+fh.WindowState = 'maximized';
 
+box on
+grid minor
+hold on
+
+diff_radial = abs(posRICa(1:every_nth_point:end,1)-lumelite_true_ephem.('x (km)')(1:tt/ephem_freq+1).*1000);
+diff_crosstrack = abs(posRICa(1:every_nth_point:end,2)-lumelite_true_ephem.('y (km)')(1:tt/ephem_freq+1).*1000);
+diff_intrack = abs(posRICa(1:every_nth_point:end,3)-lumelite_true_ephem.('z (km)')(1:tt/ephem_freq+1).*1000);
+
+
+x_plot = plot(time_steps(1,1:every_nth_point:end), diff_radial, 'xr', 'LineWidth', 1);
+y_plot = plot(time_steps(1,1:every_nth_point:end), diff_crosstrack, 'xb', 'LineWidth', 1);
+z_plot = plot(time_steps(1,1:every_nth_point:end), diff_intrack, 'xg', 'LineWidth', 1);
+
+
+xline(43200) %First thruster fire
+xline(1252865.075) %Second thruster fire. 
+set(gca,'FontSize',15)
+xlabel('Time after ignition (s)','interpreter', 'latex', 'fontsize', 20, 'Rotation', 0)
+ylabel('Absolute difference(m)','interpreter', 'latex', 'fontsize', 20, 'Rotation', 90)
+title(sprintf('Deviation in position ECI, MATLAB vs STK, lumelite %d w.r.t 1', vehicle_number), 'interpreter', 'latex', 'fontsize', 20, 'Rotation', 0)
+L=legend([x_plot y_plot z_plot], 'radial', 'cross-track', 'in-track');
+L.FontSize=15;
+exportgraphics(gcf, sprintf("Plot Comparisons\\abs_error_eci_lum%d.png", vehicle_number), 'Resolution', 300)
+end
+
+% 
 
 function [instant_thrust, fire_indices] = instantaneous_thrust_when_firing(Th_total)
 %%% Function to output the thrust when it is firing. Outputs the time of
